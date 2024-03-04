@@ -3,240 +3,174 @@
 #include <string>
 #include <conio.h>
 #include <random>
+#include <array>
 
-#define KEY_UP 72
-#define KEY_DOWN 80
-#define KEY_LEFT 75
-#define KEY_RIGHT 77
+// We use wasd for movement because the _getchr() return twice with arrows keys:
+// https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/078sfkak(v=vs.100)?redirectedfrom=MSDN
+#define KEY_UP 'w'
+#define KEY_DOWN 's'
+#define KEY_LEFT 'a'
+#define KEY_RIGHT 'd'
 #define ENTER '\r'
+#define ADD '+'
+#define SUB '-'
+#define DIV '/'
+#define MUL '*'
+#define EXP '^'
 
 using namespace std;
+using Scheme = std::array<std::array<int, 10>, 10>;
 
-enum class Suit
-{
-    HEARTS,
-    DIAMONS,
-    CLUBS,
-    SPADES
-};
-
-enum class CardName
-{
-    ACE = 1,
-    TWO = 2,
-    THREE = 3,
-    FOUR = 4,
-    FIVE = 5,
-    SIX = 6,
-    SEVEN = 7,
-    EIGHT = 8,
-    NINE = 9,
-    TEN = 10,
-    JACK = 11,
-    QUEEN = 12,
-    KING = 13
-};
-
-struct Card
-{
-    Suit suit;
-    CardName name;
-
-    string ToString()
-    {
-        string suit_repr;
-        switch (suit)
-        {
-        case Suit::HEARTS:
-            suit_repr = "\u001b[1;31m(3\u001b[0m";
-            break;
-        case Suit::DIAMONS:
-            suit_repr = "\u001b[1;31m<>\u001b[0m";
-            break;
-        case Suit::CLUBS:
-            suit_repr = "\u001b[1;34m%'\u001b[0m";
-            break;
-        case Suit::SPADES:
-            suit_repr = "\u001b[1;34m|>\u001b[0m";
-            break;
-        }
-        string name_repr;
-        switch (name)
-        {
-        case CardName::ACE:
-            name_repr = "A";
-            break;
-        case CardName::JACK:
-            name_repr = "J";
-            break;
-        case CardName::QUEEN:
-            name_repr = "Q";
-            break;
-        case CardName::KING:
-            name_repr = "K";
-            break;
-        default:
-            name_repr = to_string((int)name);
-            break;
-        }
-
-        return name_repr + suit_repr;
-    }
-};
-
-struct Deck
-{
-    Card cards[52];
-
-    void createCards()
-    {
-        for (int s = (int)Suit::HEARTS; s <= (int)Suit::SPADES; s++)
-        {
-            for (int i = (int)CardName::ACE; i <= (int)CardName::KING; i++)
-            {
-                Card card;
-                card.suit = (Suit)s;
-                card.name = (CardName)i;
-                cards[(13 * s) + (i - 1)] = card;
-            };
-        };
-    }
-
-    void randomize()
-    {
-        std::random_device rd;
-        std::mt19937 g(rd());
-        std::shuffle(std::begin(cards), std::end(cards), g);
-    }
-};
-
-struct Hand
-{
-    Card cards[13];
-
-    void printHand()
-    {
-        int i = 1;
-        for (Card card : cards)
-        {
-            cout << "(" << i << ")" << card.ToString() << "  ";
-            i++;
-        }
-        cout << endl;
-    }
-};
-
-void printBinding(int x = -1, int y = -1, int locked = -1)
+void showScheme(Scheme scheme, int x1, int y1, int x2, int y2)
 {
     system("CLS");
-    cout << "---------------------------" << endl;
-    cout << "     MAKE YOUR BINDING!" << endl;
-    cout << "---------------------------" << endl;
-
-    string suits[4] = {"\u001b[1;31m(3\u001b[0m",
-                       "\u001b[1;31m<>\u001b[0m",
-                       "\u001b[1;34m%'\u001b[0m",
-                       "\u001b[1;34m|>\u001b[0m"};
-
-    for (int i = 0; i < 7; i++)
+    for (int row = 0; row < 10; row++)
     {
-        for (int s = 0; s < 4; s++)
+        for (int col = 0; col < 10; col++)
         {
-            if ((i == y && s == x))
+            if ((row == y1 && col == x1) || (row == y2 && col == x2))
             {
                 cout << "\u001b[40;1m";
             }
-            else if ((4 * i + s) <= locked)
-            {
-                cout << "\u001b[47m";
-            }
 
-            cout << (i + 1) << suits[s] << "\t";
+            if (scheme[row][col] == -1)
+            {
+                cout << ' ';
+            }
+            else
+            {
+                cout << scheme[row][col];
+            }
+            cout << "\u001b[0m ";
         }
         cout << endl
              << flush;
     }
 }
 
-void gameLoop(Hand p1, Hand p2, Hand p3, Hand p4)
+Scheme createScheme(float emptiness = 0.1)
 {
-    while (true)
+    Scheme scheme;
+    for (int x = 0; x < 10; x++)
     {
-        p1.printHand();
-        int x;
-        cout << "Gioca una carta";
-        cin >> x;
+        for (int y = 0; y < 10; y++)
+        {
+            scheme[x][y] = -1;
+        }
     }
+
+    for (int x = 0; x < 10; x++)
+    {
+        int skip = 0;
+        for (int y = 0; y < 10; y++)
+        {
+            std::random_device dev;
+            std::mt19937 rng(dev());
+            std::uniform_int_distribution<std::mt19937::result_type> dist9(0, 9);
+            std::uniform_int_distribution<std::mt19937::result_type> empt(0, 100);
+
+            if (empt(rng) < emptiness * 100)
+            {
+                if (skip == 0)
+                {
+                    skip += 1;
+                    continue;
+                }
+                break;
+            }
+
+            scheme[x][y] = dist9(rng);
+            skip += 1;
+        }
+    }
+    return scheme;
+}
+
+Scheme applyInput(Scheme scheme, char input, int x1, int y1, int x2, int y2)
+{
+    int v1 = scheme[y1][x1];
+    int v2 = scheme[y2][x2];
+    if (v1 == -1 || v2 == -1)
+    {
+        return scheme;
+    }
+
+    int r = v1;
+    switch (input)
+    {
+    case ADD:
+        r =  v1 + v2;
+        break;
+    case SUB:
+        r =  v1 - v2;
+        break;
+    case MUL:
+        r =  v1 * v2;
+        break;
+    default:
+        break;
+    }
+    scheme[y1][x1] = r;
+
+    while (x2 < 9 && scheme[y1][x2] != -1)
+    {
+        scheme[y1][x2] = scheme[y1][x2 + 1];
+        x2++;
+    }
+    if (x2 == 9)
+    {
+        scheme[y1][x2] = -1;
+    }
+
+    return scheme;
 }
 
 int main()
 {
     // Serve per visualizzare i caratteri speciali su vs code.
     system("chcp 65001");
-    Deck deck;
-    deck.createCards();
-    deck.randomize();
 
-    Hand p1;
-    Hand p2;
-    Hand p3;
-    Hand p4;
-    
-    for (int i = 0; i < 13; i++)
+    Scheme scheme = createScheme();
+    int x1 = 0;
+    int y1 = 0;
+    int x2 = 1;
+    int y2 = 0;
+
+    int input = 0;
+    while (input != ENTER)
     {
-        p1.cards[i] = deck.cards[i];
-        p2.cards[i] = deck.cards[i + 13];
-        p3.cards[i] = deck.cards[i + 26];
-        p4.cards[i] = deck.cards[i + 29];
-    }
+        showScheme(scheme, x1, y1, x2, y2);
 
-    int x = 0;
-    int y = 0;
-    int locked = -1;
-
-    bool confirmed = false;
-    while (!confirmed)
-    {
-        printBinding(x, y, locked);
-
-        switch (getch())
+        input = _getch();
+        switch (input)
         {
         case KEY_UP:
         {
-            int y2 = (y > 0) ? y - 1 : 6;
-            if ((4 * y2 + x) > locked)
-                y = y2;
+            y1 = abs((y1 - 1) % 10);
+            y2 = y1;
             break;
         }
         case KEY_DOWN:
         {
-            int y2 = (y < 7) ? y + 1 : max(0, (int)(locked / 4));
-            if ((4 * y2 + x) > locked)
-                y = y2;
+            y1 = (y1 + 1) % 10;
+            y2 = y1;
             break;
         }
         case KEY_LEFT:
         {
-            int x2 = (x > 0) ? x - 1 : 3;
-            if ((4 * y + x2) > locked)
-                x = x2;
+            x1 = abs((x1 - 1) % 10);
+            x2 = (x1 + 1) % 10;
             break;
         }
         case KEY_RIGHT:
         {
-            int x2 = (x < 4) ? x + 1 : max(0, (int)(locked / 4));
-            if ((4 * y + x2) > locked)
-                x = x2;
+            x1 = (x1 + 1) % 10;
+            x2 = (x1 + 1) % 10;
             break;
         }
-        case ENTER:
-            locked = 4 * y + x;
-            confirmed = true;
-            break;
         default:
+            scheme = applyInput(scheme, input, x1, y1, x2, y2);
             break;
         }
     }
-
-    gameLoop(p1, p2, p3, p4);
 }
