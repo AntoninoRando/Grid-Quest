@@ -96,22 +96,20 @@ Scheme applyInput(Scheme scheme, char input, int x1, int y1, int x2, int y2)
         return scheme;
     }
 
-    int r = v1;
     switch (input)
     {
     case ADD:
-        r = v1 + v2;
+        scheme[y1][x1] = v1 + v2;
         break;
     case SUB:
-        r = v1 - v2;
+        scheme[y1][x1] = v1 - v2;
         break;
     case MUL:
-        r = v1 * v2;
+        scheme[y1][x1] = v1 * v2;
         break;
     default:
-        break;
+        return scheme;
     }
-    scheme[y1][x1] = r;
 
     while (x2 < 9 && scheme[y1][x2] != -1)
     {
@@ -130,8 +128,8 @@ int main()
 {
     // Serve per visualizzare i caratteri speciali su vs code.
     system("chcp 65001");
-
     Cursor user = Cursor(10, 10);
+    user.setType(CursorType());
     Scheme scheme = createScheme();
 
     int input = 0;

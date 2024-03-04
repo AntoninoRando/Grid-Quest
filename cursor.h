@@ -1,3 +1,44 @@
+#include <tuple>
+#pragma once // This header file has been included in mulitple file, thus this avoid error C2011
+
+using namespace std; // Without this line, we have to write std::tuple instead of tuple
+
+enum CursorDirection
+{
+    RGT,
+    LFT,
+    TOP,
+    BOT,
+};
+
+class CursorType
+{
+protected:
+    CursorDirection direction = CursorDirection::RGT;
+
+public:
+    virtual tuple<int, int> cursorEnd(int, int);
+};
+
+tuple<int, int> CursorType::cursorEnd(int xS, int yS)
+{
+    switch (direction)
+    {
+    case CursorDirection::RGT:
+        return tuple<int, int>(xS + 1, yS);
+    case CursorDirection::LFT:
+        return tuple<int, int>(xS - 1, yS);
+    case CursorDirection::TOP:
+        return tuple<int, int>(xS, yS - 1);
+    case CursorDirection::BOT:
+        return tuple<int, int>(xS, yS + 1);
+    default:
+        break;
+    }
+
+    return tuple<int, int>(xS + 1, yS);
+}
+
 /// @brief The user cursor on the scheme.
 class Cursor
 {
@@ -9,6 +50,7 @@ class Cursor
     int yMax;
     int clampX(int);
     int clampY(int);
+    CursorType cursorType;
 
 public:
     /// @brief Create the user cursor placed at the start of the scheme.
@@ -23,6 +65,7 @@ public:
     int yS() { return yS_; }
     int xE() { return xE_; }
     int yE() { return yE_; }
+    void setType(CursorType t) { cursorType = t; }
     void updateCursor(int, int);
 };
 
@@ -32,8 +75,9 @@ void Cursor::updateCursor(int xAdd, int yAdd)
 {
     xS_ = clampX(xS_ + xAdd);
     yS_ = clampY(yS_ + yAdd);
-    xE_ = clampX(xS_ + 1);
-    yE_ = yS_;
+    tuple<int, int> xyE = cursorType.cursorEnd(xS_, yS_);
+    xE_ = clampX(get<0>(xyE));
+    yE_ = clampY(get<1>(xyE));
 }
 
 int Cursor::clampX(int x)
