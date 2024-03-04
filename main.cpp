@@ -4,6 +4,7 @@
 #include <conio.h>
 #include <random>
 #include <array>
+#include "cursor.h"
 
 // We use wasd for movement because the _getchr() return twice with arrows keys:
 // https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/078sfkak(v=vs.100)?redirectedfrom=MSDN
@@ -99,13 +100,13 @@ Scheme applyInput(Scheme scheme, char input, int x1, int y1, int x2, int y2)
     switch (input)
     {
     case ADD:
-        r =  v1 + v2;
+        r = v1 + v2;
         break;
     case SUB:
-        r =  v1 - v2;
+        r = v1 - v2;
         break;
     case MUL:
-        r =  v1 * v2;
+        r = v1 * v2;
         break;
     default:
         break;
@@ -130,46 +131,39 @@ int main()
     // Serve per visualizzare i caratteri speciali su vs code.
     system("chcp 65001");
 
+    Cursor user = Cursor(10, 10);
     Scheme scheme = createScheme();
-    int x1 = 0;
-    int y1 = 0;
-    int x2 = 1;
-    int y2 = 0;
 
     int input = 0;
     while (input != ENTER)
     {
-        showScheme(scheme, x1, y1, x2, y2);
+        showScheme(scheme, user.xS(), user.yS(), user.xE(), user.yE());
 
         input = _getch();
         switch (input)
         {
         case KEY_UP:
         {
-            y1 = abs((y1 - 1) % 10);
-            y2 = y1;
+            user.updateCursor(0, -1);
             break;
         }
         case KEY_DOWN:
         {
-            y1 = (y1 + 1) % 10;
-            y2 = y1;
+            user.updateCursor(0, 1);
             break;
         }
         case KEY_LEFT:
         {
-            x1 = abs((x1 - 1) % 10);
-            x2 = (x1 + 1) % 10;
+            user.updateCursor(-1, 0);
             break;
         }
         case KEY_RIGHT:
         {
-            x1 = (x1 + 1) % 10;
-            x2 = (x1 + 1) % 10;
+            user.updateCursor(1, 0);
             break;
         }
         default:
-            scheme = applyInput(scheme, input, x1, y1, x2, y2);
+            scheme = applyInput(scheme, input, user.xS(), user.yS(), user.xE(), user.yE());
             break;
         }
     }
