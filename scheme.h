@@ -12,6 +12,32 @@ using namespace std;
 
 class Scheme : public array<array<optional<int>, 10>, 10>
 {
+    /// @brief Fill a gap (hole) in the scheme by letting fall down every cell
+    /// above the hole, then shifting left every cell next to the new gaps born
+    /// after the fall-down. This shifting process occurs from top to bottom.
+    /// @param x The x coordinate (column) of the hole.
+    /// @param y The y coordinate (row) of the hole.
+    void ajustHole(int x, int y)
+    {
+        // Fall from above.
+        while (y > 0 && !(*this)[y][x].has_value())
+        {
+            (*this)[y][x] = (*this)[y - 1][x];
+            (*this)[y - 1][x] = optional<int>{};
+            y--;
+        }
+        // Fall from left.
+        while (y < 10 && !(*this)[y][x].has_value())
+        {
+            for (int xNext = x + 1; xNext < 10; xNext++)
+            {
+                (*this)[y][xNext - 1] = (*this)[y][xNext];
+                (*this)[y][xNext] = optional<int>{};
+            }
+            y++;
+        }
+    }
+
 public:
     void show(int, int, int, int);
     void fill(float);
@@ -33,7 +59,7 @@ void Scheme::show(int xS, int yS, int xE, int yE)
             {
                 cout << "\u001b[4;1m";
             }
-            
+
             optional<int> cell = (*this)[row][col];
             if (cell.has_value())
             {
@@ -43,7 +69,7 @@ void Scheme::show(int xS, int yS, int xE, int yE)
             {
                 cout << ' ';
             }
-            cout << "\u001b[0m ";
+            cout << "\u001b[0m\t";
         }
         cout << endl
              << flush;
@@ -56,7 +82,7 @@ void Scheme::fill(float emptiness = 0.2)
     {
         for (int y = 0; y < 10; y++)
         {
-            (*this)[x][y] = optional<int> {};
+            (*this)[x][y] = optional<int>{};
         }
     }
 
@@ -81,12 +107,12 @@ void Scheme::fill(float emptiness = 0.2)
     }
 }
 
-void Scheme::applyInput(char input, int x1, int y1, int x2, int y2)
+void Scheme::applyInput(char input, int xS, int yS, int xE, int yE)
 {
-    optional<int> v1 = (*this)[y1][x1];
-    optional<int> v2 = (*this)[y2][x2];
+    optional<int> v1 = (*this)[yS][xS];
+    optional<int> v2 = (*this)[yE][xE];
 
-    if (!v1.has_value()|| !v2.has_value())
+    if (!v1.has_value() || !v2.has_value())
     {
         return;
     }
@@ -94,25 +120,17 @@ void Scheme::applyInput(char input, int x1, int y1, int x2, int y2)
     switch (input)
     {
     case ADD:
-        (*this)[y1][x1] = v1.value() + v2.value();
+        (*this)[yS][xS] = v1.value() + v2.value();
         break;
     case SUB:
-        (*this)[y1][x1] = v1.value() - v2.value();
+        (*this)[yS][xS] = v1.value() - v2.value();
         break;
     case MUL:
-        (*this)[y1][x1] = v1.value() * v2.value();
+        (*this)[yS][xS] = v1.value() * v2.value();
         break;
     default:
         return;
     }
-
-    while (x2 < 9 && (*this)[y1][x2].has_value())
-    {
-        (*this)[y1][x2] = (*this)[y1][x2 + 1];
-        x2++;
-    }
-    if (x2 == 9)
-    {
-        (*this)[y1][x2] = optional<int> {};
-    }
+    (*this)[yE][xE] = optional<int>{};
+    ajustHole(xE, yE);
 }
