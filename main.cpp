@@ -13,6 +13,8 @@
 #define KEY_DOWN 's'
 #define KEY_LEFT 'a'
 #define KEY_RIGHT 'd'
+#define ROTATE_LEFT 'q'
+#define ROTATE_RIGHT 'e'
 #define ENTER '\r'
 
 using namespace std;
@@ -26,10 +28,19 @@ int main()
     Scheme scheme;
     scheme.fill();
 
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_int_distribution<std::mt19937::result_type> cent(0, 100);
+    int objective = cent(rng);
+
     int input = 0;
     while (input != ENTER)
     {
+
         scheme.show(user.xS(), user.yS(), user.xE(), user.yE());
+        cout << endl
+             << endl
+             << "OBJECTIVE: " << objective << endl;
 
         input = _getch();
         switch (input)
@@ -54,9 +65,28 @@ int main()
             user.updateCursor(1, 0);
             break;
         }
+        case ROTATE_LEFT:
+        {
+            user.rotateLeft();
+            break;
+        }
+        case ROTATE_RIGHT:
+        {
+            user.rotateRight();
+            break;
+        }
         default:
             scheme.applyInput(input, user.xS(), user.yS(), user.xE(), user.yE());
             break;
         }
+    }
+
+    if (scheme[9][0].value() == objective)
+    {
+        cout << "VICTORY";
+    }
+    else
+    {
+        cout << "DEFEAT";
     }
 }

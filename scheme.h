@@ -53,11 +53,11 @@ void Scheme::show(int xS, int yS, int xE, int yE)
         {
             if (row == yS && col == xS)
             {
-                cout << "\u001b[7;1m";
+                cout << "\u001b[4m" << "\u001b[48;5;240m";
             }
             else if (row == yE && col == xE)
             {
-                cout << "\u001b[4;1m";
+                cout << "\u001b[48;5;240m";
             }
 
             optional<int> cell = (*this)[row][col];

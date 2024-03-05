@@ -3,12 +3,14 @@
 
 using namespace std; // Without this line, we have to write std::tuple instead of tuple
 
+/// @brief All possible cursor direction (right, bottom, left and top). They are
+/// defined in clockwise order.
 enum CursorDirection
 {
     RGT,
+    BOT,
     LFT,
     TOP,
-    BOT,
 };
 
 class CursorType
@@ -18,6 +20,42 @@ protected:
 
 public:
     virtual tuple<int, int> cursorEnd(int, int);
+    void rotateLeft()
+    {
+        switch (direction)
+        {
+        case RGT:
+            direction = TOP;
+            break;
+        case TOP:
+            direction = LFT;
+            break;
+        case LFT:
+            direction = BOT;
+            break;
+        case BOT:
+            direction = RGT;
+            break;
+        }
+    }
+    void rotateRight()
+    {
+        switch (direction)
+        {
+        case RGT:
+            direction = BOT;
+            break;
+        case BOT:
+            direction = LFT;
+            break;
+        case LFT:
+            direction = TOP;
+            break;
+        case TOP:
+            direction = RGT;
+            break;
+        }
+    }
 };
 
 tuple<int, int> CursorType::cursorEnd(int xS, int yS)
@@ -67,6 +105,16 @@ public:
     int yE() { return yE_; }
     void setType(CursorType t) { cursorType = t; }
     void updateCursor(int, int);
+    void rotateLeft()
+    {
+        cursorType.rotateLeft();
+        updateCursor(0, 0);
+    }
+    void rotateRight()
+    {
+        cursorType.rotateRight();
+        updateCursor(0, 0);
+    }
 };
 
 /// @brief Add (xAdd, yAdd) to the cursor start coordinate, then adjust where
