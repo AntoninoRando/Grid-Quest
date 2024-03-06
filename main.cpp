@@ -26,7 +26,7 @@ int main()
     Cursor user = Cursor(10, 10);
     user.setType(CursorType());
     Scheme scheme;
-    scheme.fill();
+    scheme.fill(0.6);
 
     std::random_device dev;
     std::mt19937 rng(dev());

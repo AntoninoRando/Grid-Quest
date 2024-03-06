@@ -6,9 +6,12 @@ using namespace std;
 
 #define ADD '+'
 #define SUB '-'
-#define DIV '/'
 #define MUL '*'
-#define EXP '^'
+#define MOD '%'
+/// Merge two numbers: `A | B := AB`. If at least one of the two is negative, the
+/// result is negative too.
+#define MRG '|'
+#define DIV '/'
 
 class Scheme : public array<array<optional<int>, 10>, 10>
 {
@@ -53,7 +56,8 @@ void Scheme::show(int xS, int yS, int xE, int yE)
         {
             if (row == yS && col == xS)
             {
-                cout << "\u001b[4m" << "\u001b[48;5;240m";
+                cout << "\u001b[4m"
+                     << "\u001b[48;5;240m";
             }
             else if (row == yE && col == xE)
             {
@@ -111,6 +115,8 @@ void Scheme::applyInput(char input, int xS, int yS, int xE, int yE)
 {
     optional<int> v1 = (*this)[yS][xS];
     optional<int> v2 = (*this)[yE][xE];
+    int sign = 1;
+    int zeros = 1;
 
     if (!v1.has_value() || !v2.has_value())
     {
@@ -127,6 +133,25 @@ void Scheme::applyInput(char input, int xS, int yS, int xE, int yE)
         break;
     case MUL:
         (*this)[yS][xS] = v1.value() * v2.value();
+        break;
+    case MOD:
+        (*this)[yS][xS] = v1.value() % v2.value();
+        break;
+    case MRG:
+        sign = (v1.value() < 0 || v2.value() < 0) ? -1 : 1;
+        zeros = 10;
+        while (zeros < abs(v2.value()))
+        {
+            zeros *= 10;
+        }
+        (*this)[yS][xS] = sign * (abs(v1.value()) * zeros + abs(v2.value()));
+        break;
+    case DIV:
+        if (v1.value() % v2.value() != 0)
+        {
+            return;
+        }
+        (*this)[yS][xS] = (int)(v1.value() / v2.value());
         break;
     default:
         return;

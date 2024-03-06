@@ -86,8 +86,8 @@ class Cursor
     int yE_ = 0;
     int xMax;
     int yMax;
-    int clampX(int);
-    int clampY(int);
+    int modX(int);
+    int modY(int);
     CursorType cursorType;
 
 public:
@@ -121,35 +121,21 @@ public:
 /// the cursor ends.
 void Cursor::updateCursor(int xAdd, int yAdd)
 {
-    xS_ = clampX(xS_ + xAdd);
-    yS_ = clampY(yS_ + yAdd);
+    xS_ = modX(xS_ + xAdd);
+    yS_ = modY(yS_ + yAdd);
     tuple<int, int> xyE = cursorType.cursorEnd(xS_, yS_);
-    xE_ = clampX(get<0>(xyE));
-    yE_ = clampY(get<1>(xyE));
+    xE_ = modX(get<0>(xyE));
+    yE_ = modY(get<1>(xyE));
 }
 
-int Cursor::clampX(int x)
+///@brief Perform positive module operator between x and xMax.
+int Cursor::modX(int x)
 {
-    if (x >= xMax)
-    {
-        return x = 0;
-    }
-    if (x < 0)
-    {
-        return x = xMax - 1;
-    }
-    return x;
+    return (x % xMax + xMax) % xMax;
 }
 
-int Cursor::clampY(int y)
+///@brief Perform positive module operator between y and yMax.
+int Cursor::modY(int y)
 {
-    if (y >= yMax)
-    {
-        return y = 0;
-    }
-    if (y < 0)
-    {
-        return y = yMax - 1;
-    }
-    return y;
+    return (y % yMax + yMax) % yMax;
 }
