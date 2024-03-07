@@ -13,9 +13,9 @@ using namespace std;
 #define MRG '|'
 #define DIV '/'
 
-class Scheme : public array<array<optional<int>, 10>, 10>
+class Grid : public array<array<optional<int>, 10>, 10>
 {
-    /// @brief Fill a gap (hole) in the scheme by letting fall down every cell
+    /// @brief Fill a gap (hole) in the Grid by letting fall down every cell
     /// above the hole, then shifting left every cell next to the new gaps born
     /// after the fall-down. This shifting process occurs from top to bottom.
     /// @param x The x coordinate (column) of the hole.
@@ -40,6 +40,7 @@ class Scheme : public array<array<optional<int>, 10>, 10>
             y++;
         }
     }
+    tuple<int, int, int, int> modCursor(int, int, int, int);
 
 public:
     void show(int, int, int, int);
@@ -47,8 +48,37 @@ public:
     void applyInput(char, int, int, int, int);
 };
 
-void Scheme::show(int xS, int yS, int xE, int yE)
+///@brief Perform positive module operator between x, y and xMin, yMin
+/// respectively, where xMin is the maximum column with a value at row y, and
+/// yMin is the maximum row with a value at column x.
+tuple<int, int, int, int> Grid::modCursor(int xS, int yS, int xE, int yE)
 {
+    int xM = 0;
+    while (xM < 10 && (*this)[9][xM].has_value())
+    {
+        xM += 1;
+    }
+    int yM = 0;
+    while (yM < 10 && !(*this)[yM][0].has_value())
+    {
+        yM += 1;
+    }
+    yM = 10 - yM;
+    xS = (xS % xM + xM) % xM;
+    xE = (xE % xM + xM) % xM;
+    yS = (yS % yM + yM) % yM + (10 - yM);
+    yE = (yE % yM + yM) % yM + (10 - yM);
+    return tuple<int, int, int, int>(xS, yS, xE, yE);
+}
+
+void Grid::show(int xS, int yS, int xE, int yE)
+{
+    tuple<int, int, int, int> xyMod = modCursor(xS, yS, xE, yE);
+    xS = get<0>(xyMod);
+    yS = get<1>(xyMod);
+    xE = get<2>(xyMod);
+    yE = get<3>(xyMod);
+
     system("CLS");
     for (int row = 0; row < 10; row++)
     {
@@ -80,7 +110,7 @@ void Scheme::show(int xS, int yS, int xE, int yE)
     }
 }
 
-void Scheme::fill(float emptiness = 0.2)
+void Grid::fill(float emptiness = 0.2)
 {
     for (int x = 0; x < 10; x++)
     {
@@ -111,8 +141,14 @@ void Scheme::fill(float emptiness = 0.2)
     }
 }
 
-void Scheme::applyInput(char input, int xS, int yS, int xE, int yE)
+void Grid::applyInput(char input, int xS, int yS, int xE, int yE)
 {
+    tuple<int, int, int, int> xyMod = modCursor(xS, yS, xE, yE);
+    xS = get<0>(xyMod);
+    yS = get<1>(xyMod);
+    xE = get<2>(xyMod);
+    yE = get<3>(xyMod);
+
     optional<int> v1 = (*this)[yS][xS];
     optional<int> v2 = (*this)[yE][xE];
     int sign = 1;

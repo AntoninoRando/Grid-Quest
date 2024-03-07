@@ -5,7 +5,7 @@
 #include <random>
 #include <array>
 #include "cursor.h"
-#include "scheme.h"
+#include "Grid.h"
 
 // We use wasd for movement because the _getchr() return twice with arrows keys:
 // https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/078sfkak(v=vs.100)?redirectedfrom=MSDN
@@ -23,10 +23,10 @@ int main()
 {
     // Serve per visualizzare i caratteri speciali su vs code.
     system("chcp 65001");
-    Cursor user = Cursor(10, 10);
+    Cursor user = Cursor();
     user.setType(CursorType());
-    Scheme scheme;
-    scheme.fill(0.6);
+    Grid Grid;
+    Grid.fill(0.6);
 
     std::random_device dev;
     std::mt19937 rng(dev());
@@ -37,7 +37,7 @@ int main()
     while (input != ENTER)
     {
 
-        scheme.show(user.xS(), user.yS(), user.xE(), user.yE());
+        Grid.show(user.xS(), user.yS(), user.xE(), user.yE());
         cout << endl
              << endl
              << "OBJECTIVE: " << objective << endl;
@@ -76,12 +76,12 @@ int main()
             break;
         }
         default:
-            scheme.applyInput(input, user.xS(), user.yS(), user.xE(), user.yE());
+            Grid.applyInput(input, user.xS(), user.yS(), user.xE(), user.yE());
             break;
         }
     }
 
-    if (scheme[9][0].value() == objective)
+    if (Grid[9][0].value() == objective)
     {
         cout << "VICTORY";
     }

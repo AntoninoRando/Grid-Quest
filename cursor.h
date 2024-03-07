@@ -77,28 +77,17 @@ tuple<int, int> CursorType::cursorEnd(int xS, int yS)
     return tuple<int, int>(xS + 1, yS);
 }
 
-/// @brief The user cursor on the scheme.
+/// @brief The user cursor on the Grid. By deafult, it spawn at the
+/// bottom-left corner of the Grid.
 class Cursor
 {
     int xS_ = 0;
-    int yS_ = 0;
+    int yS_ = 9;
     int xE_ = 1;
-    int yE_ = 0;
-    int xMax;
-    int yMax;
-    int modX(int);
-    int modY(int);
+    int yE_ = 9;
     CursorType cursorType;
 
 public:
-    /// @brief Create the user cursor placed at the start of the scheme.
-    /// @param schemeW Scheme max row size.
-    /// @param schemeH scheme max column size.
-    Cursor(int schemeW, int schemeH)
-    {
-        xMax = schemeW;
-        yMax = schemeH;
-    }
     int xS() { return xS_; }
     int yS() { return yS_; }
     int xE() { return xE_; }
@@ -121,21 +110,9 @@ public:
 /// the cursor ends.
 void Cursor::updateCursor(int xAdd, int yAdd)
 {
-    xS_ = modX(xS_ + xAdd);
-    yS_ = modY(yS_ + yAdd);
+    xS_ = xS_ + xAdd;
+    yS_ = yS_ + yAdd;
     tuple<int, int> xyE = cursorType.cursorEnd(xS_, yS_);
-    xE_ = modX(get<0>(xyE));
-    yE_ = modY(get<1>(xyE));
-}
-
-///@brief Perform positive module operator between x and xMax.
-int Cursor::modX(int x)
-{
-    return (x % xMax + xMax) % xMax;
-}
-
-///@brief Perform positive module operator between y and yMax.
-int Cursor::modY(int y)
-{
-    return (y % yMax + yMax) % yMax;
+    xE_ = get<0>(xyE);
+    yE_ = get<1>(xyE);
 }
