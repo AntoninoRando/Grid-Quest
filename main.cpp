@@ -6,6 +6,8 @@
 #include <array>
 #include "cursor.h"
 #include "Grid.h"
+#include <windows.h>
+#include <mmsystem.h>
 
 // We use wasd for movement because the _getchr() return twice with arrows keys:
 // https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/078sfkak(v=vs.100)?redirectedfrom=MSDN
@@ -43,6 +45,7 @@ int main()
              << "OBJECTIVE: " << objective << endl;
 
         input = _getch();
+        PlaySound("assets\\jump.wav", NULL, SND_ASYNC);
         switch (input)
         {
         case KEY_UP:
@@ -81,12 +84,12 @@ int main()
         }
     }
 
-    if (Grid[9][0].value() == objective)
-    {
-        cout << "VICTORY";
-    }
-    else
-    {
-        cout << "DEFEAT";
-    }
+    // if (Grid.grid[9][0].value() == objective)
+    // {
+    //     cout << "VICTORY";
+    // }
+    // else
+    // {
+    //     cout << "DEFEAT";
+    // }
 }

@@ -1,8 +1,14 @@
 #include <iostream>
-#include <array>
 #include <optional>
+#include <cassert>
 
-using namespace std;
+using std::optional;
+using std::cout;
+using std::endl;
+using std::flush;
+using std::get;
+using std::tuple;
+using std::max;
 
 #define ADD '+'
 #define SUB '-'
@@ -13,8 +19,9 @@ using namespace std;
 #define MRG '|'
 #define DIV '/'
 
-class Grid : public array<array<optional<int>, 10>, 10>
+class Grid
 {
+    optional<int> grid[10][10];
     /// @brief Fill a gap (hole) in the Grid by letting fall down every cell
     /// above the hole, then shifting left every cell next to the new gaps born
     /// after the fall-down. This shifting process occurs from top to bottom.
@@ -23,19 +30,19 @@ class Grid : public array<array<optional<int>, 10>, 10>
     void ajustHole(int x, int y)
     {
         // Fall from above.
-        while (y > 0 && !(*this)[y][x].has_value())
+        while (y > 0 && !grid[y][x].has_value())
         {
-            (*this)[y][x] = (*this)[y - 1][x];
-            (*this)[y - 1][x] = optional<int>{};
+            grid[y][x] = grid[y - 1][x];
+            grid[y - 1][x] = optional<int>{};
             y--;
         }
         // Fall from left.
-        while (y < 10 && !(*this)[y][x].has_value())
+        while (y < 10 && !grid[y][x].has_value())
         {
             for (int xNext = x + 1; xNext < 10; xNext++)
             {
-                (*this)[y][xNext - 1] = (*this)[y][xNext];
-                (*this)[y][xNext] = optional<int>{};
+                grid[y][xNext - 1] = grid[y][xNext];
+                grid[y][xNext] = optional<int>{};
             }
             y++;
         }
@@ -54,12 +61,12 @@ public:
 tuple<int, int, int, int> Grid::modCursor(int xS, int yS, int xE, int yE)
 {
     int xM = 0;
-    while (xM < 10 && (*this)[9][xM].has_value())
+    while (xM < 10 && grid[9][xM].has_value())
     {
         xM += 1;
     }
     int yM = 0;
-    while (yM < 10 && !(*this)[yM][0].has_value())
+    while (yM < 10 && !grid[yM][0].has_value())
     {
         yM += 1;
     }
@@ -68,7 +75,7 @@ tuple<int, int, int, int> Grid::modCursor(int xS, int yS, int xE, int yE)
     xE = (xE % xM + xM) % xM;
     yS = (yS % yM + yM) % yM + (10 - yM);
     yE = (yE % yM + yM) % yM + (10 - yM);
-    return tuple<int, int, int, int>(xS, yS, xE, yE);
+    return std::make_tuple(xS, yS, xE, yE);
 }
 
 void Grid::show(int xS, int yS, int xE, int yE)
@@ -94,7 +101,7 @@ void Grid::show(int xS, int yS, int xE, int yE)
                 cout << "\u001b[48;5;240m";
             }
 
-            optional<int> cell = (*this)[row][col];
+            optional<int> cell = grid[row][col];
             if (cell.has_value())
             {
                 cout << cell.value();
@@ -116,7 +123,7 @@ void Grid::fill(float emptiness = 0.2)
     {
         for (int y = 0; y < 10; y++)
         {
-            (*this)[x][y] = optional<int>{};
+            grid[x][y] = optional<int>{};
         }
     }
 
@@ -136,7 +143,7 @@ void Grid::fill(float emptiness = 0.2)
             }
 
             maxLine = max(x, maxLine);
-            (*this)[y][x] = dist9(rng);
+            grid[y][x] = dist9(rng);
         }
     }
 }
@@ -149,8 +156,8 @@ void Grid::applyInput(char input, int xS, int yS, int xE, int yE)
     xE = get<2>(xyMod);
     yE = get<3>(xyMod);
 
-    optional<int> v1 = (*this)[yS][xS];
-    optional<int> v2 = (*this)[yE][xE];
+    optional<int> v1 = grid[yS][xS];
+    optional<int> v2 = grid[yE][xE];
     int sign = 1;
     int zeros = 1;
 
@@ -162,16 +169,16 @@ void Grid::applyInput(char input, int xS, int yS, int xE, int yE)
     switch (input)
     {
     case ADD:
-        (*this)[yS][xS] = v1.value() + v2.value();
+        grid[yS][xS] = v1.value() + v2.value();
         break;
     case SUB:
-        (*this)[yS][xS] = v1.value() - v2.value();
+        grid[yS][xS] = v1.value() - v2.value();
         break;
     case MUL:
-        (*this)[yS][xS] = v1.value() * v2.value();
+        grid[yS][xS] = v1.value() * v2.value();
         break;
     case MOD:
-        (*this)[yS][xS] = v1.value() % v2.value();
+        grid[yS][xS] = v1.value() % v2.value();
         break;
     case MRG:
         sign = (v1.value() < 0 || v2.value() < 0) ? -1 : 1;
@@ -180,18 +187,18 @@ void Grid::applyInput(char input, int xS, int yS, int xE, int yE)
         {
             zeros *= 10;
         }
-        (*this)[yS][xS] = sign * (abs(v1.value()) * zeros + abs(v2.value()));
+        grid[yS][xS] = sign * (abs(v1.value()) * zeros + abs(v2.value()));
         break;
     case DIV:
         if (v1.value() % v2.value() != 0)
         {
             return;
         }
-        (*this)[yS][xS] = (int)(v1.value() / v2.value());
+        grid[yS][xS] = (int)(v1.value() / v2.value());
         break;
     default:
         return;
     }
-    (*this)[yE][xE] = optional<int>{};
+    grid[yE][xE] = optional<int>{};
     ajustHole(xE, yE);
 }

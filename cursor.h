@@ -1,8 +1,6 @@
 #include <tuple>
 #pragma once // This header file has been included in mulitple file, thus this avoid error C2011
 
-using namespace std; // Without this line, we have to write std::tuple instead of tuple
-
 /// @brief All possible cursor direction (right, bottom, left and top). They are
 /// defined in clockwise order.
 enum CursorDirection
@@ -19,7 +17,7 @@ protected:
     CursorDirection direction = CursorDirection::RGT;
 
 public:
-    virtual tuple<int, int> cursorEnd(int, int);
+    virtual std::tuple<int, int> cursorEnd(int, int);
     void rotateLeft()
     {
         switch (direction)
@@ -58,23 +56,23 @@ public:
     }
 };
 
-tuple<int, int> CursorType::cursorEnd(int xS, int yS)
+std::tuple<int, int> CursorType::cursorEnd(int xS, int yS)
 {
     switch (direction)
     {
     case CursorDirection::RGT:
-        return tuple<int, int>(xS + 1, yS);
+        return std::make_tuple(xS + 1, yS);
     case CursorDirection::LFT:
-        return tuple<int, int>(xS - 1, yS);
+        return std::make_tuple(xS - 1, yS);
     case CursorDirection::TOP:
-        return tuple<int, int>(xS, yS - 1);
+        return std::make_tuple(xS, yS - 1);
     case CursorDirection::BOT:
-        return tuple<int, int>(xS, yS + 1);
+        return std::make_tuple(xS, yS + 1);
     default:
         break;
     }
 
-    return tuple<int, int>(xS + 1, yS);
+    return std::make_tuple(xS + 1, yS);
 }
 
 /// @brief The user cursor on the Grid. By deafult, it spawn at the
@@ -112,7 +110,7 @@ void Cursor::updateCursor(int xAdd, int yAdd)
 {
     xS_ = xS_ + xAdd;
     yS_ = yS_ + yAdd;
-    tuple<int, int> xyE = cursorType.cursorEnd(xS_, yS_);
-    xE_ = get<0>(xyE);
-    yE_ = get<1>(xyE);
+    auto xyE = cursorType.cursorEnd(xS_, yS_);
+    xE_ = std::get<0>(xyE);
+    yE_ = std::get<1>(xyE);
 }
