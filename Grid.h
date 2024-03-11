@@ -2,13 +2,13 @@
 #include <optional>
 #include <cassert>
 
-using std::optional;
 using std::cout;
 using std::endl;
 using std::flush;
 using std::get;
-using std::tuple;
 using std::max;
+using std::optional;
+using std::tuple;
 
 #define ADD '+'
 #define SUB '-'
@@ -93,12 +93,11 @@ void Grid::show(int xS, int yS, int xE, int yE)
         {
             if (row == yS && col == xS)
             {
-                cout << "\u001b[4m"
-                     << "\u001b[48;5;240m";
+                cout << "\u001b[4m" << "\u001b[41;1m";
             }
             else if (row == yE && col == xE)
             {
-                cout << "\u001b[48;5;240m";
+                cout << "\u001b[31;1m";
             }
 
             optional<int> cell = grid[row][col];
