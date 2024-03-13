@@ -53,9 +53,45 @@ public:
     void show(int, int, int, int);
     void fill(float);
     void applyInput(char, int, int, int, int);
+    /// @brief Counts how many non-empty cells are remained in the grid.
+    /// @return 
+    int contRemaining()
+    {
+        int count = 0;
+        int strikes = 0;
+        for (int row = 9; row >= 0; row--)
+        {
+            if (strikes == 2)
+            {
+                break;
+            }
+
+            for (int col = 0; col < 10; col++)
+            {
+                if (grid[row][col].has_value())
+                {
+                    count += 1;
+                    strikes = 0;
+                    continue;
+                }
+                
+                strikes ++;
+                break;
+            }
+        }
+        return count;
+    };
+    optional<int> getCell(int x, int y)
+    {
+        if (x < 0 || x > 9 || y < 0 || y > 9)
+        {
+            return optional<int>{};
+        }
+        return grid[y][x];
+    }
 };
 
-///@brief Perform positive module operator between x, y and xMin, yMin
+/// @brief Perform positive module operator between x, y and xMin, yMin
 /// respectively, where xMin is the maximum column with a value at row y, and
 /// yMin is the maximum row with a value at column x.
 tuple<int, int, int, int> Grid::modCursor(int xS, int yS, int xE, int yE)
@@ -93,7 +129,8 @@ void Grid::show(int xS, int yS, int xE, int yE)
         {
             if (row == yS && col == xS)
             {
-                cout << "\u001b[4m" << "\u001b[41;1m";
+                cout << "\u001b[4m"
+                     << "\u001b[41;1m";
             }
             else if (row == yE && col == xE)
             {
