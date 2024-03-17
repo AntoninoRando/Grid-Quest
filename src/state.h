@@ -9,12 +9,15 @@
 #define ROTATE_RIGHT 'e'
 #define ENTER '\r'
 
+#pragma comment(lib, "winmm.lib")
+
 class Context;
 class Bye;
 class Victory;
 class Defeat;
 class Quest;
 class Menu;
+
 
 class State
 {
@@ -24,6 +27,7 @@ protected:
 public:
     virtual void processInput(char) = 0;
     virtual void show() = 0;
+    virtual void setup() { system("cls"); }
     void setContext(Context *context)
     {
         this->context_ = context;
@@ -39,11 +43,12 @@ public:
     {
         this->state_ = state;
         this->state_->setContext(this);
+        this->state_->setup();
     }
     void show()
     {
-        system("CLS");
         this->state_->show();
+        std::cout.flush();
     }
     void processInput(char input)
     {
@@ -54,9 +59,9 @@ public:
 class Bye : public State
 {
 public:
-    Bye()
+    void setup() override
     {
-        system("CLS");
+        system("cls");
         std::cout << "Bye!";
         exit(0);
     }
@@ -161,40 +166,48 @@ class Menu : public State
     int currentOption = 0;
     std::string options[3] = {"Play", "Settings", "Exit"};
 
-public:
-    Menu()
+    void highlightOption(int option)
     {
-        system("CLS");
-        std::cout << "GRID QUEST";
-        PlaySound(TEXT("assets\\opening.wav"), NULL, SND_SYNC);
+        setCursorPosition(0, currentOption);
+        std::cout << "   \u001b[7m "
+                  << options[currentOption]
+                  << " \u001b[0m";
     }
-    void show() override
+
+    void resetOption(int option)
     {
+        setCursorPosition(0, currentOption);
+        std::cout << options[currentOption] << "         ";
+    }
+
+public:
+    void setup() override
+    {
+        system("cls");
         for (size_t i = 0; i < 3; i++)
         {
-            if (currentOption == i)
-            {
-                std::cout << "   \u001b[7m ";
-            }
             std::cout << options[i];
-            if (currentOption == i)
-            {
-                std::cout << " \u001b[0m";
-            }
             std::cout << std::endl;
         }
     }
+
+    void show() override
+    {
+        highlightOption(currentOption);
+    }
+
     void processInput(char input) override
     {
+        resetOption(currentOption);
         switch (input)
         {
         case KEY_UP:
             currentOption -= 1;
-            PlaySound(TEXT("assets\\sweep.wav"), NULL, SND_FILENAME | SND_ASYNC);
+            PlaySound(TEXT("assets\\sw.wav"), NULL, SND_FILENAME | SND_ASYNC);
             break;
         case KEY_DOWN:
             currentOption += 1;
-            PlaySound(TEXT("assets\\sweep.wav"), NULL, SND_FILENAME | SND_ASYNC);
+            PlaySound(TEXT("assets\\sw.wav"), NULL, SND_FILENAME | SND_ASYNC);
             break;
         case ENTER:
             PlaySound(TEXT("assets\\lock.wav"), NULL, SND_FILENAME | SND_ASYNC);
@@ -219,3 +232,15 @@ void Defeat::processInput(char input)
 {
     context_->transitionTo(new Menu);
 }
+
+class Opening : public State
+{
+public:
+    void show() override
+    {
+        std::cout << "GRID QUEST";
+        // PlaySound(TEXT("assets\\opening.wav"), NULL, SND_SYNC);
+        context_->transitionTo(new Menu);
+    }
+    void processInput(char input) override {}
+};

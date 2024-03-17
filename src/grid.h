@@ -1,6 +1,7 @@
 #include <iostream>
 #include <optional>
 #include <cassert>
+#include "utils.cpp"
 
 using std::cout;
 using std::endl;
@@ -54,7 +55,7 @@ public:
     void fill(float);
     void applyInput(char, int, int, int, int);
     /// @brief Counts how many non-empty cells are remained in the grid.
-    /// @return 
+    /// @return
     int contRemaining()
     {
         int count = 0;
@@ -74,8 +75,8 @@ public:
                     strikes = 0;
                     continue;
                 }
-                
-                strikes ++;
+
+                strikes++;
                 break;
             }
         }
@@ -122,7 +123,7 @@ void Grid::show(int xS, int yS, int xE, int yE)
     xE = get<2>(xyMod);
     yE = get<3>(xyMod);
 
-    system("CLS");
+    clearConsole();
     for (int row = 0; row < 10; row++)
     {
         for (int col = 0; col < 10; col++)
@@ -155,31 +156,23 @@ void Grid::show(int xS, int yS, int xE, int yE)
 
 void Grid::fill(float emptiness = 0.2)
 {
-    for (int x = 0; x < 10; x++)
-    {
-        for (int y = 0; y < 10; y++)
-        {
-            grid[x][y] = optional<int>{};
-        }
-    }
+    int remaining = 100 - (100 * emptiness);
 
-    int maxLine = -1;
-    for (int y = 0; y < 10; y++)
+    for (int row = 9; row >= 0; row--)
     {
-        for (int x = 0; x < 10; x++)
+        for (int col = 0; col < 10; col++)
         {
             std::random_device dev;
             std::mt19937 rng(dev());
             std::uniform_int_distribution<std::mt19937::result_type> dist9(0, 9);
             std::uniform_int_distribution<std::mt19937::result_type> empt(0, 100);
+            grid[row][col] = optional<int>{dist9(rng)};
+            remaining -= 1;
 
-            if ((empt(rng) < emptiness * 100) && x > maxLine)
+            if (remaining == 0)
             {
-                break;
+                return;
             }
-
-            maxLine = max(x, maxLine);
-            grid[y][x] = dist9(rng);
         }
     }
 }

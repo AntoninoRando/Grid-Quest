@@ -13,12 +13,11 @@
 // https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/078sfkak(v=vs.100)?redirectedfrom=MSDN
 
 using namespace std;
-#pragma comment(lib, "winmm.lib")
 
 int main()
 {
     Context game;
-    game.transitionTo(new Menu);
+    game.transitionTo(new Opening);
     game.show();
 
     // Serve per visualizzare i caratteri speciali su vs code.
