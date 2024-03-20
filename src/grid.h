@@ -2,14 +2,10 @@
 #include <optional>
 #include <cassert>
 #include "utils.cpp"
+#include <cstdlib> // for rand and srand
+#include <ctime>   // for time
 
-using std::cout;
-using std::endl;
-using std::flush;
-using std::get;
-using std::max;
-using std::optional;
-using std::tuple;
+using std::cout, std::get, std::max, std::optional, std::tuple;
 
 #define ADD '+'
 #define SUB '-'
@@ -149,8 +145,7 @@ void Grid::show(int xS, int yS, int xE, int yE)
             }
             cout << "\u001b[0m\t";
         }
-        cout << endl
-             << flush;
+        cout << '\n';
     }
 }
 
@@ -158,15 +153,13 @@ void Grid::fill(float emptiness = 0.2)
 {
     int remaining = 100 - (100 * emptiness);
 
+    // Initialize the random seed based on the current time
+    srand(time(nullptr));
     for (int row = 9; row >= 0; row--)
     {
         for (int col = 0; col < 10; col++)
         {
-            std::random_device dev;
-            std::mt19937 rng(dev());
-            std::uniform_int_distribution<std::mt19937::result_type> dist9(0, 9);
-            std::uniform_int_distribution<std::mt19937::result_type> empt(0, 100);
-            grid[row][col] = optional<int>{dist9(rng)};
+            grid[row][col] = optional<int>{rand() % 9};
             remaining -= 1;
 
             if (remaining == 0)
@@ -203,12 +196,6 @@ void Grid::applyInput(char input, int xS, int yS, int xE, int yE)
     case SUB:
         grid[yS][xS] = v1.value() - v2.value();
         break;
-    case MUL:
-        grid[yS][xS] = v1.value() * v2.value();
-        break;
-    case MOD:
-        grid[yS][xS] = v1.value() % v2.value();
-        break;
     case MRG:
         sign = (v1.value() < 0 || v2.value() < 0) ? -1 : 1;
         zeros = 10;
@@ -217,13 +204,6 @@ void Grid::applyInput(char input, int xS, int yS, int xE, int yE)
             zeros *= 10;
         }
         grid[yS][xS] = sign * (abs(v1.value()) * zeros + abs(v2.value()));
-        break;
-    case DIV:
-        if (v1.value() % v2.value() != 0)
-        {
-            return;
-        }
-        grid[yS][xS] = (int)(v1.value() / v2.value());
         break;
     default:
         return;
