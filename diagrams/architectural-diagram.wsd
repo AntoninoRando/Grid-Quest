@@ -1,0 +1,32 @@
+@startuml architecture
+
+database Progress
+file Config
+
+package "Game" {
+    [menu]
+    [quest]
+    [exit]
+    [settings]
+    [profiles]
+}
+
+[menu] -down-> [quest] : play
+[menu] -down- [exit]
+[menu] -down- [settings]
+[menu] -down- [profiles] : switch
+
+[settings] -- [colors]
+[settings] -- [key binding]
+[settings] -- Config
+
+[quest] - [quest] : adventure
+[quest] -> [menu] : lost/won
+
+[profiles] -left- Progress
+
+Actor User
+
+User -right-> [menu] : Open
+
+@enduml

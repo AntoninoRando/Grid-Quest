@@ -1,0 +1,31 @@
+@startuml questactivity
+
+skinparam ArrowHeadColor none
+
+start
+
+while (Input given?) is (Yes)  
+    if (move/rotate cursor) then (Yes)
+    elseif (mathematical operation) then (Yes)
+        :Reduce Grid;
+
+        if (1 cell remaining?) then (Yes)
+            if (match quest?) then (Yes)
+                :Victory;
+                if (is this last quest?) then (No)
+                    :New quest;
+                    detach
+                endif
+            else (No)
+                :Lost;
+            endif
+            break
+        endif
+    endif
+    :Update UI;
+endwhile (Interrupt)
+:Return to Menu;
+
+stop
+
+@enduml

@@ -1,0 +1,31 @@
+@startuml message-sequence-chart
+
+participant Menu
+participant Adventure
+participant Quest
+participant Grid
+control Input
+participant Database
+
+Menu -> Adventure : Play
+activate Adventure
+
+== Setup Game ==
+Adventure -> Quest : Begin 1st
+activate Quest
+Quest -> Quest : Generate "quest"\nnumber
+Quest -> Grid : Create
+Grid -> Database : Store new game
+
+== Loop == 
+Grid -> Input : Wait response
+Input -> Grid : Give Input
+Grid -> Grid : Process Input
+
+== Check End ==
+Grid -> Quest : 1 cell remaining
+return Quest
+Quest --> Menu : cell don't match quest
+Quest --> Adventure : cell match
+
+@enduml

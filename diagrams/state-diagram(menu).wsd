@@ -1,0 +1,29 @@
+@startuml state-diagram(menu)
+
+[*] --> Menu
+
+state Menu {
+    [*] --> Home 
+    Home : display progress
+    Home --> Quest : play
+    Home --> Settings : edit
+    Home --> Profiles : change
+    Home --> Exit
+
+    Exit : play closing animation
+
+    Quest --> Home : win/lost/interrupt
+    Settings --> Home : confirm/discard changes
+}
+
+state Profiles {
+    Profile1 --> Home : choosed
+    Profile2 --> Home : choosed
+    Profile3 --> Home : choosed
+}
+
+Profiles --> Profiles : delete
+
+Exit --> [*]
+
+@enduml
