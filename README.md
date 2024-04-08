@@ -2,13 +2,18 @@
 
 A simple console game in which your goal is to complete a quest by reducing a grid of numbers!
 
-The game is meant to be played in spare times, when you are at your computer and whant something fast and relaxing. It does not require expensive setup, neither does it requires much computer's power, so it is perfect to run and play instantly.
+The game is meant to be played in spare times, when you are at your computer and want something fast and relaxing. It does not require expensive setup, neither does it requires much computer's power, so it is perfect to run and play instantly.
 
 ## Gameplay
 
-When you play a new game, you embark on a new adventure full of quests. Each **quest** is simply a **number**: you have to obtain that number through mathematical operations. You can perform these operations between the number of a grid. Each operation performed takes 2 numbers and produce a new one, thus reducing the grid until one number remains: it must be the same as your quest!
+When you play a new game, you are given a grid of numbers and a ***quest***, that is a single number. Your goal is to reduce the grid until one number remains, and it must be the same as your quest.
 
-Every quest fulfilled put you a step forward to completing the adventure. But a single quest failed will cause the end of your entire adventure.
+To reduce the grid, move your cursor around the gird with the keyboard and select two cells. Then, perform an operation ($+$, $-$, $*$, …) by pressing the corresponding key on the keyboard.
+
+Be careful! Every new challenge you start with 10 life points but every operation has a cost:
+
+- after reducing two grid, you lose an amount of hp equal to the difference between the two cells;
+- luckily, each 2 operation performed you gain 5 hp.
 
 ## User Requirements
 
@@ -18,7 +23,7 @@ Every quest fulfilled put you a step forward to completing the adventure. But a 
 
     The system should allow users to create 3 local accounts by providing distinct usernames.
 
-    There is no verification process since the account does not containt important informations.
+    There is no verification process since the account does not contain important information.
 
 2. #### Settings Personalization
 

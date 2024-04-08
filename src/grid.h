@@ -49,7 +49,10 @@ class Grid
 public:
     void show(int, int, int, int);
     void fill(float);
-    void applyInput(char, int, int, int, int);
+    /// @brief
+    /// @return An optional describing the difference between the cells' values,
+    /// if an operation was performed on them.
+    optional<int> applyInput(char, int, int, int, int);
     /// @brief Counts how many non-empty cells are remained in the grid.
     /// @return
     int contRemaining()
@@ -170,7 +173,7 @@ void Grid::fill(float emptiness = 0.2)
     }
 }
 
-void Grid::applyInput(char input, int xS, int yS, int xE, int yE)
+optional<int> Grid::applyInput(char input, int xS, int yS, int xE, int yE)
 {
     tuple<int, int, int, int> xyMod = modCursor(xS, yS, xE, yE);
     xS = get<0>(xyMod);
@@ -185,8 +188,10 @@ void Grid::applyInput(char input, int xS, int yS, int xE, int yE)
 
     if (!v1.has_value() || !v2.has_value())
     {
-        return;
+        return optional<int>{};
     }
+
+    int diff = abs(v1.value() - v2.value());
 
     switch (input)
     {
@@ -195,6 +200,19 @@ void Grid::applyInput(char input, int xS, int yS, int xE, int yE)
         break;
     case SUB:
         grid[yS][xS] = v1.value() - v2.value();
+        break;
+    case MUL:
+        grid[yS][xS] = v1.value() * v2.value();
+        break;
+    case MOD:
+        grid[yS][xS] = v1.value() % v2.value();
+        break;
+    case DIV:
+        if (v2.value() == 0 || v1.value() % v2.value() != 0)
+        {
+            return optional<int>{};
+        }
+        grid[yS][xS] = v1.value() / v2.value();
         break;
     case MRG:
         sign = (v1.value() < 0 || v2.value() < 0) ? -1 : 1;
@@ -206,8 +224,10 @@ void Grid::applyInput(char input, int xS, int yS, int xE, int yE)
         grid[yS][xS] = sign * (abs(v1.value()) * zeros + abs(v2.value()));
         break;
     default:
-        return;
+        return optional<int>{};
     }
     grid[yE][xE] = optional<int>{};
     ajustHole(xE, yE);
+    
+    return diff;
 }

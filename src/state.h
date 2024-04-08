@@ -15,18 +15,23 @@
 
 class Context;
 
+/// @brief A state of the game (e.g., Menu, Profile, New Game).
 class State
 {
 protected:
     Context *context_;
 
 public:
+    /// @brief Modify this state based on the user input.
     virtual void processInput(char) = 0;
+    /// @brief Display this state on the console.
     virtual void show() = 0;
     virtual void setup();
+    /// @brief Change the current context.  
     void setContext(Context *);
 };
 
+/// @brief The current game state.
 class Context
 {
     State *state_;
@@ -37,6 +42,7 @@ public:
     void processInput(char input);
 };
 
+/// @brief The last state of the game, shown before the game closes.
 class Bye : public State
 {
 public:
@@ -45,6 +51,7 @@ public:
     void processInput(char input) override;
 };
 
+/// @brief Game state that shows after winning a game.
 class Victory : public State
 {
 public:
@@ -52,6 +59,7 @@ public:
     void processInput(char) override;
 };
 
+/// @brief Game state that shows after losing a game.
 class Defeat : public State
 {
 public:
@@ -59,20 +67,25 @@ public:
     void processInput(char) override;
 };
 
+/// @brief The main game.
 class Quest : public State
 {
     Cursor user;
     Grid grid;
     int quest;
+    int hp = 10;
+    int hp_add_amount = 5;
+    bool hp_add = true;
     bool isEnd();
 
 public:
     Quest();
-
     void show() override;
     void processInput(char input) override;
 };
 
+/// @brief Game state in which is possible to navigate through other game states
+/// and start a new game.
 class Menu : public State
 {
     int currentOption = 0;
@@ -87,6 +100,7 @@ public:
     void processInput(char input) override;
 };
 
+/// @brief The first state of the game, shown when the game opens.
 class Opening : public State
 {
 public:

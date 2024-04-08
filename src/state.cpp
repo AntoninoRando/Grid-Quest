@@ -61,7 +61,7 @@ void Defeat::processInput(char input)
 
 bool Quest::isEnd()
 {
-    return grid.contRemaining() == 1;
+    return grid.contRemaining() == 1 || hp <= 0;
 }
 
 Quest::Quest()
@@ -77,11 +77,13 @@ Quest::Quest()
 void Quest::show()
 {
     grid.show(user.xS(), user.yS(), user.xE(), user.yE());
-    std::cout << "\n\nQUEST: " << quest;
+    std::cout << "\n\nQUEST: " << quest << "\t|\tHP: " << hp;
 }
 
 void Quest::processInput(char input)
 {
+    optional<int> hp_diff = optional<int> {};
+
     switch (input)
     {
     case KEY_UP:
@@ -107,8 +109,18 @@ void Quest::processInput(char input)
         return;
     default:
         // PlaySound(TEXT("assets\\lock.wav"), NULL, SND_FILENAME | SND_ASYNC);
-        grid.applyInput(input, user.xS(), user.yS(), user.xE(), user.yE());
+        hp_diff = grid.applyInput(input, user.xS(), user.yS(), user.xE(), user.yE());
         break;
+    }
+
+    if (hp_diff.has_value())
+    {
+        hp -= hp_diff.value();
+        hp_add = !hp_add;
+        if (hp_add) 
+        {
+            hp += hp_add_amount;
+        }
     }
 
     if (isEnd())
