@@ -18,62 +18,9 @@ protected:
 
 public:
     virtual std::tuple<int, int> cursorEnd(int, int);
-    void rotateLeft()
-    {
-        switch (direction)
-        {
-        case RGT:
-            direction = TOP;
-            break;
-        case TOP:
-            direction = LFT;
-            break;
-        case LFT:
-            direction = BOT;
-            break;
-        case BOT:
-            direction = RGT;
-            break;
-        }
-    }
-    void rotateRight()
-    {
-        switch (direction)
-        {
-        case RGT:
-            direction = BOT;
-            break;
-        case BOT:
-            direction = LFT;
-            break;
-        case LFT:
-            direction = TOP;
-            break;
-        case TOP:
-            direction = RGT;
-            break;
-        }
-    }
+    void rotateLeft();
+    void rotateRight();
 };
-
-std::tuple<int, int> CursorType::cursorEnd(int xS, int yS)
-{
-    switch (direction)
-    {
-    case CursorDirection::RGT:
-        return std::make_tuple(xS + 1, yS);
-    case CursorDirection::LFT:
-        return std::make_tuple(xS - 1, yS);
-    case CursorDirection::TOP:
-        return std::make_tuple(xS, yS - 1);
-    case CursorDirection::BOT:
-        return std::make_tuple(xS, yS + 1);
-    default:
-        break;
-    }
-
-    return std::make_tuple(xS + 1, yS);
-}
 
 /// @brief The user cursor on the Grid. By deafult, it spawn at the
 /// bottom-left corner of the Grid.
@@ -91,6 +38,9 @@ public:
     int xE() { return xE_; }
     int yE() { return yE_; }
     void setType(CursorType t) { cursorType = t; }
+
+    /// @brief Add (xAdd, yAdd) to the cursor start coordinate, then adjust where
+    /// the cursor ends.
     void updateCursor(int, int);
     void rotateLeft()
     {
@@ -103,14 +53,3 @@ public:
         updateCursor(0, 0);
     }
 };
-
-/// @brief Add (xAdd, yAdd) to the cursor start coordinate, then adjust where
-/// the cursor ends.
-void Cursor::updateCursor(int xAdd, int yAdd)
-{
-    xS_ = xS_ + xAdd;
-    yS_ = yS_ + yAdd;
-    auto xyE = cursorType.cursorEnd(xS_, yS_);
-    xE_ = std::get<0>(xyE);
-    yE_ = std::get<1>(xyE);
-}

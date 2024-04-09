@@ -1,5 +1,5 @@
-#include "cursor.h"
-#include "grid.h"
+#include "cursor.cpp"
+#include "grid.cpp"
 #include <cstdlib> // for rand and srand
 #include <ctime>   // for time
 

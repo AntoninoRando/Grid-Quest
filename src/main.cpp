@@ -1,12 +1,4 @@
-#include <iostream>
-#include <vector>
-#include <string>
 #include <conio.h>
-#include <random>
-#include <array>
-#include <windows.h>
-#include <mmsystem.h>
-
 #include "state.cpp"
 
 // We use wasd for movement because the _getchr() return twice with arrows keys:
@@ -17,8 +9,7 @@ int main()
     Context game;
     game.transitionTo(new Opening);
 
-    // Serve per visualizzare i caratteri speciali su console, come ad esempio
-    // i colori.
+    // Serve per visualizzare i caratteri speciali su console, e.g. i colori.
     system("chcp 65001");
 
     while (true)
