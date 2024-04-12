@@ -1,10 +1,10 @@
-#include "cursor.cpp"
-#include "grid.cpp"
-#include "settings.cpp"
-#include <cstdlib> // for rand and srand
-#include <ctime>   // for time
+#ifndef STATE_H_
+#define STATE_H_
 
-#pragma comment(lib, "winmm.lib")
+#include "settings.h"
+#include "cursor.h"
+#include "grid.h"
+#include "utils.h"
 
 class Context;
 
@@ -15,13 +15,16 @@ protected:
     Context *context_;
 
 public:
-    /// @brief Modify this state based on the user input.
-    virtual void processInput(char) = 0;
-    /// @brief Display this state on the console.
-    virtual void show() = 0;
-    virtual void setup();
     /// @brief Change the current context.
-    void setContext(Context *);
+    void setContext(Context *context)
+    {
+        this->context_ = context;
+    }
+    /// @brief Modify this state based on the user input.
+    virtual void processInput(char) {}
+    /// @brief Display this state on the console.
+    virtual void show() const {}
+    virtual void setup();
 };
 
 /// @brief The current game state.
@@ -31,7 +34,7 @@ class Context
 
 public:
     void transitionTo(State *state);
-    void show();
+    void show() const;
     void processInput(char input);
 };
 
@@ -40,15 +43,13 @@ class Bye : public State
 {
 public:
     void setup() override;
-    void show() override;
-    void processInput(char input) override;
 };
 
 /// @brief Game state that shows after winning a game.
 class Victory : public State
 {
 public:
-    void show() override;
+    void show() const override;
     void processInput(char) override;
 };
 
@@ -56,7 +57,7 @@ public:
 class Defeat : public State
 {
 public:
-    void show() override;
+    void show() const override;
     void processInput(char) override;
 };
 
@@ -74,7 +75,7 @@ class Quest : public State
 
 public:
     Quest();
-    void show() override;
+    void show() const override;
     void processInput(char input) override;
 };
 
@@ -86,12 +87,12 @@ class Menu : public State
     int currentOption = 0;
     std::string options[3] = {"Play", "Settings", "Exit"};
 
-    void highlightOption(int option);
+    void highlightOption(int option) const;
     void resetOption(int option);
 
 public:
     void setup() override;
-    void show() override;
+    void show() const override;
     void processInput(char input) override;
 };
 
@@ -99,17 +100,19 @@ class Settings : public State
 {
     int currentSection = 0;
     int currentSectionPosition = 0;
-    Category *sections[2] = {DefaultControls(), DefaultGraphic()};
+    Category *sections[2] = {
+        GlobalSettings::controls,
+        GlobalSettings::graphic};
     int sectionsCursorOffset[2] = {};
     int numberOfSections = 2;
 
     bool selected = false;
 
-    void highlightSection(int option);
+    void highlightSection(int option) const;
 
 public:
     void setup() override;
-    void show() override;
+    void show() const override;
     void processInput(char input) override;
 };
 
@@ -117,6 +120,7 @@ public:
 class Opening : public State
 {
 public:
-    void show() override;
-    void processInput(char input) override;
+    void show() const override;
 };
+
+#endif

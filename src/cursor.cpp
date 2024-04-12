@@ -38,25 +38,6 @@ void CursorType::rotateRight()
     }
 }
 
-std::tuple<int, int> CursorType::cursorEnd(int xS, int yS)
-{
-    switch (direction)
-    {
-    case CursorDirection::RGT:
-        return std::make_tuple(xS + 1, yS);
-    case CursorDirection::LFT:
-        return std::make_tuple(xS - 1, yS);
-    case CursorDirection::TOP:
-        return std::make_tuple(xS, yS - 1);
-    case CursorDirection::BOT:
-        return std::make_tuple(xS, yS + 1);
-    default:
-        break;
-    }
-
-    return std::make_tuple(xS + 1, yS);
-}
-
 void Cursor::updateCursor(int xAdd, int yAdd)
 {
     xS_ = xS_ + xAdd;

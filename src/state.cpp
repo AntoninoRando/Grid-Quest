@@ -1,13 +1,13 @@
 #include "state.h"
+#include "utils.h"
+#include <cstdlib> // for rand and srand
+#include <iostream>
+#include <cassert>
+#include <optional>
 
 void State::setup()
 {
     clearConsole();
-}
-
-void State::setContext(Context *context)
-{
-    this->context_ = context;
 }
 
 void Context::transitionTo(State *state)
@@ -16,7 +16,7 @@ void Context::transitionTo(State *state)
     this->state_->setContext(this);
     this->state_->setup();
 }
-void Context::show()
+void Context::show() const
 {
     this->state_->show();
     std::cout.flush();
@@ -33,11 +33,8 @@ void Bye::setup()
     std::cout << "Bye!";
     exit(0);
 }
-void Bye::show() {}
 
-void Bye::processInput(char input) {}
-
-void Victory::show()
+void Victory::show() const
 {
     std::cout << "You won!\n"
               << "Press any key to continue...";
@@ -48,7 +45,7 @@ void Victory::processInput(char input)
     context_->transitionTo(new Menu);
 }
 
-void Defeat::show()
+void Defeat::show() const
 {
     std::cout << "You lost\n"
               << "Press any key to continue...";
@@ -74,7 +71,7 @@ Quest::Quest()
     quest = rand() % 100 + 1;
 }
 
-void Quest::show()
+void Quest::show() const
 {
     grid.show(user.xS(), user.yS(), user.xE(), user.yE());
     std::cout << "\n\nQUEST: " << quest
@@ -84,36 +81,27 @@ void Quest::show()
 
 void Quest::processInput(char input)
 {
-    optional<int> hp_diff = optional<int>{};
+    std::optional<int> hp_diff = std::optional<int>{};
 
-    if (input == GlobalSettings::getKey("Move up"))
-    {
+    if (input == MOVE_UP)
         user.updateCursor(0, -1);
-    }
-    switch (input)
-    {
-    case KEY_DOWN:
+    else if (input == MOVE_DOWN)
         user.updateCursor(0, 1);
-        break;
-    case KEY_LEFT:
+    else if (input == MOVE_LEFT)
         user.updateCursor(-1, 0);
-        break;
-    case KEY_RIGHT:
+    else if (input == MOVE_RIGHT)
         user.updateCursor(1, 0);
-        break;
-    case ROTATE_LEFT:
+    else if (input == ROTATE_LEFT)
         user.rotateLeft();
-        break;
-    case ROTATE_RIGHT:
+    else if (input == ROTATE_RIGHT)
         user.rotateRight();
-        break;
-    case ESC:
+    else if (input == ESC)
+    {
         context_->transitionTo(new Menu);
         return;
-    default:
-        hp_diff = grid.applyInput(input, user.xS(), user.yS(), user.xE(), user.yE());
-        break;
     }
+    else
+        hp_diff = grid.applyInput(input, user.xS(), user.yS(), user.xE(), user.yE());
 
     if (hp_diff.has_value())
     {
@@ -138,7 +126,7 @@ void Quest::processInput(char input)
     }
 }
 
-void Menu::highlightOption(int option)
+void Menu::highlightOption(int option) const
 {
     option %= sizeof(options) / sizeof(std::string);
     setCursorPosition(0, option);
@@ -163,7 +151,7 @@ void Menu::setup()
     highlightOption(currentOption);
 }
 
-void Menu::show()
+void Menu::show() const
 {
     highlightOption(currentOption);
 }
@@ -171,17 +159,17 @@ void Menu::show()
 void Menu::processInput(char input)
 {
     resetOption(currentOption);
-    
-    if (input == GlobalSettings::getKey("Move up"))
+
+    if (input == MOVE_UP)
     {
         currentOption -= 1;
     }
-    switch (input)
+    else if (input == MOVE_DOWN)
     {
-    case KEY_DOWN:
         currentOption += 1;
-        break;
-    case ENTER:
+    }
+    else if (input == ENTER)
+    {
         if (options[currentOption] == "Play")
         {
             context_->transitionTo(new Quest);
@@ -200,9 +188,6 @@ void Menu::processInput(char input)
 
 void Settings::setup()
 {
-    parseSettings(sections[0], "savedSettings\\controls.txt");
-    parseSettings(sections[1], "savedSettings\\graphic.txt");
-
     clearConsole();
 
     std::cout << "<- (ESC)\n";
@@ -222,14 +207,14 @@ void Settings::setup()
     std::cout << '\n';
 }
 
-void Settings::show()
+void Settings::show() const
 {
     highlightSection(currentSection);
     setCursorPosition(0, 3);
     clearConsole(0, 3);
 
 std:
-    string code = selected ? "0" : "38;5;240";
+    std::string code = selected ? "0" : "38;5;240";
     std::cout << "\u001b[" + code + "m"
               << sections[currentSection]->ToString()
               << "\u001b[0m";
@@ -243,31 +228,25 @@ void Settings::processInput(char input)
 
     if (selected)
     {
-        switch (input)
+        if (input == ESC)
         {
-        case KEY_LEFT:
-            break;
-        case KEY_RIGHT:
-            break;
-        case ESC:
             selected = false;
             return;
         }
     }
     else
     {
-        switch (input)
-        {
-        case KEY_LEFT:
+        if (input == MOVE_LEFT)
             currentSection -= 1;
-            break;
-        case KEY_RIGHT:
+        else if (input == MOVE_RIGHT)
             currentSection += 1;
-            break;
-        case ENTER:
+        else if (input == ENTER)
+        {
             selected = true;
             return;
-        case ESC:
+        }
+        else if (input == ESC)
+        {
             context_->transitionTo(new Menu);
             return;
         }
@@ -275,7 +254,7 @@ void Settings::processInput(char input)
     }
 }
 
-void Settings::highlightSection(int section)
+void Settings::highlightSection(int section) const
 {
     assert(section >= 0 && section <= numberOfSections);
 
@@ -285,12 +264,8 @@ void Settings::highlightSection(int section)
               << "\u001b[0m";
 }
 
-void Opening::show()
+void Opening::show() const
 {
     std::cout << "GRID QUEST";
     context_->transitionTo(new Menu);
-}
-
-void Opening::processInput(char input)
-{
 }

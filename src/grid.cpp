@@ -1,4 +1,11 @@
 #include "grid.h"
+#include "utils.h"
+#include "settings.h"
+#include <cassert>
+#include <cstdlib> // for rand and srand
+#include <ctime>   // for time
+
+using std::optional, std::cout;
 
 void Grid::ajustHole(int x, int y)
 {
@@ -6,7 +13,7 @@ void Grid::ajustHole(int x, int y)
     while (y > 0 && !grid[y][x].has_value())
     {
         grid[y][x] = grid[y - 1][x];
-        grid[y - 1][x] = optional<int>{};
+        grid[y - 1][x] = std::optional<int>{};
         y--;
     }
     // Fall from left.
@@ -15,17 +22,17 @@ void Grid::ajustHole(int x, int y)
         for (int xNext = x + 1; xNext < 10; xNext++)
         {
             grid[y][xNext - 1] = grid[y][xNext];
-            grid[y][xNext] = optional<int>{};
+            grid[y][xNext] = std::optional<int>{};
         }
         y++;
     }
 }
 
-int Grid::contRemaining()
+int Grid::contRemaining() const
 {
     int count = 0;
     int strikes = 0;
-    
+
     for (int row = 9; row >= 0; row--)
     {
         if (strikes == 2)
@@ -58,7 +65,7 @@ optional<int> Grid::getCell(int x, int y)
     return grid[y][x];
 }
 
-tuple<int, int, int, int> Grid::modCursor(int xS, int yS, int xE, int yE)
+std::tuple<int, int, int, int> Grid::modCursor(int xS, int yS, int xE, int yE) const
 {
     int xM = 0;
     while (xM < 10 && grid[9][xM].has_value())
@@ -78,13 +85,13 @@ tuple<int, int, int, int> Grid::modCursor(int xS, int yS, int xE, int yE)
     return std::make_tuple(xS, yS, xE, yE);
 }
 
-void Grid::show(int xS, int yS, int xE, int yE)
+void Grid::show(int xS, int yS, int xE, int yE) const
 {
-    tuple<int, int, int, int> xyMod = modCursor(xS, yS, xE, yE);
-    xS = get<0>(xyMod);
-    yS = get<1>(xyMod);
-    xE = get<2>(xyMod);
-    yE = get<3>(xyMod);
+    std::tuple<int, int, int, int> xyMod = modCursor(xS, yS, xE, yE);
+    xS = std::get<0>(xyMod);
+    yS = std::get<1>(xyMod);
+    xE = std::get<2>(xyMod);
+    yE = std::get<3>(xyMod);
 
     clearConsole();
     for (int row = 0; row < 10; row++)
@@ -139,11 +146,11 @@ void Grid::fill(float emptiness = 0.2)
 
 optional<int> Grid::applyInput(char input, int xS, int yS, int xE, int yE)
 {
-    tuple<int, int, int, int> xyMod = modCursor(xS, yS, xE, yE);
-    xS = get<0>(xyMod);
-    yS = get<1>(xyMod);
-    xE = get<2>(xyMod);
-    yE = get<3>(xyMod);
+    std::tuple<int, int, int, int> xyMod = modCursor(xS, yS, xE, yE);
+    xS = std::get<0>(xyMod);
+    yS = std::get<1>(xyMod);
+    xE = std::get<2>(xyMod);
+    yE = std::get<3>(xyMod);
 
     optional<int> v1 = grid[yS][xS];
     optional<int> v2 = grid[yE][xE];
@@ -157,28 +164,24 @@ optional<int> Grid::applyInput(char input, int xS, int yS, int xE, int yE)
 
     int diff = abs(v1.value() - v2.value());
 
-    switch (input)
-    {
-    case ADD:
+    if (input == ADD)
         grid[yS][xS] = v1.value() + v2.value();
-        break;
-    case SUB:
+    else if (input == SUB)
         grid[yS][xS] = v1.value() - v2.value();
-        break;
-    case MUL:
+    else if (input == MUL)
         grid[yS][xS] = v1.value() * v2.value();
-        break;
-    case MOD:
+    else if (input == MOD)
         grid[yS][xS] = v1.value() % v2.value();
-        break;
-    case DIV:
+    else if (input == DIV)
+    {
         if (v2.value() == 0 || v1.value() % v2.value() != 0)
         {
             return optional<int>{};
         }
         grid[yS][xS] = v1.value() / v2.value();
-        break;
-    case MRG:
+    }
+    else if (input == MRG)
+    {
         sign = (v1.value() < 0 || v2.value() < 0) ? -1 : 1;
         zeros = 10;
         while (zeros < abs(v2.value()))
@@ -186,10 +189,10 @@ optional<int> Grid::applyInput(char input, int xS, int yS, int xE, int yE)
             zeros *= 10;
         }
         grid[yS][xS] = sign * (abs(v1.value()) * zeros + abs(v2.value()));
-        break;
-    default:
-        return optional<int>{};
     }
+    else
+        return optional<int>{};
+
     grid[yE][xE] = optional<int>{};
     ajustHole(xE, yE);
 

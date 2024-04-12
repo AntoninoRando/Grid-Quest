@@ -1,4 +1,6 @@
-#include <iostream>
+#ifndef UTILS_H_
+#define UTILS_H_
+
 #include <windows.h>
 
 /// @brief Set the cursor position in the console.
@@ -14,3 +16,5 @@ void clearConsole(SHORT column = 0, SHORT row = 0);
 /// @param module The module.
 /// @return  value % module (positive)
 int posMod(int value, int module);
+
+#endif

@@ -1,14 +1,22 @@
+#ifndef SETTINGS_H_
+#define SETTINGS_H_
+
 #include <map>
 #include <string>
 #include <optional>
-#include <fstream>
-#include <istream>
 
-#define KEY_DOWN 's'
-#define KEY_LEFT 'a'
-#define KEY_RIGHT 'd'
-#define ROTATE_LEFT 'q'
-#define ROTATE_RIGHT 'e'
+#define MOVE_UP GlobalSettings::getKey("Move up")
+#define MOVE_DOWN GlobalSettings::getKey("Move down")
+#define MOVE_LEFT GlobalSettings::getKey("Move left")
+#define MOVE_RIGHT GlobalSettings::getKey("Move right")
+#define ROTATE_LEFT GlobalSettings::getKey("Rotate left")
+#define ROTATE_RIGHT GlobalSettings::getKey("Rotate right")
+#define ADD GlobalSettings::getKey("Add")
+#define SUB GlobalSettings::getKey("Subtract")
+#define MUL GlobalSettings::getKey("Multiply")
+#define MOD GlobalSettings::getKey("Module")
+#define MRG GlobalSettings::getKey("Concat")
+#define DIV GlobalSettings::getKey("Divide")
 #define ENTER '\r'
 #define ESC 27
 
@@ -39,7 +47,10 @@ public:
     }
     virtual void Add(Setting *Setting) {}
     virtual void Remove(Setting *Setting) {}
-    virtual std::map<std::string, Setting *> getChildren();
+    virtual std::map<std::string, Setting *> getChildren()
+    {
+        return std::map<std::string, Setting *>();
+    }
     virtual bool IsCategory() const
     {
         return false;
@@ -110,43 +121,25 @@ Category *DefaultControls();
 
 Category *DefaultGraphic();
 
-class GlobalSettings : public Category
-{
-    // Private constructor to prevent external instantiation
-    GlobalSettings() : Category("Global")
-    {
-        Add(DefaultControls());
-        Add(DefaultGraphic());
-    };
-    // Private destructor to prevent external deletion
-    ~GlobalSettings(){};
-
-protected:
-    static GlobalSettings *instance_;
-
-public:
-    // Singletons should not be cloneable.
-    GlobalSettings(GlobalSettings const &) = delete;
-    // Singletons should not be assignable.
-    void operator=(const GlobalSettings &) = delete;
-
-    static GlobalSettings *getInstance()
-    {
-        if (!instance_)
-        {
-            instance_ = new GlobalSettings();
-        }
-        return instance_;
-    };
-    static char getKey(std::string keyName);
-};
-
-GlobalSettings *GlobalSettings::instance_ = nullptr;
-
 int parseSettings(Category *settings, std::string filePath);
+
+class GlobalSettings
+{
+public:
+    static Category *controls;
+    static Category *graphic;
+    /// @brief Return the value of the KeyBind named `keyName`. If a KeyBind
+    // with that name does not exist, an 'invalid_argument' exception is raised.
+    /// @param keyName The name associated with the wanted KeyBind.
+    /// @return The character binded to the key.
+    static char getKey(std::string keyName);
+    static void load();
+};
 
 std::string &ltrim(std::string &str, std::string const &whitespace = " \r\n\t\v\f");
 
 std::string &rtrim(std::string &str, std::string const &whitespace = " \r\n\t\v\f");
 
 std::string &trim(std::string &str, std::string const &whitespace = " \r\n\t\v\f");
+
+#endif

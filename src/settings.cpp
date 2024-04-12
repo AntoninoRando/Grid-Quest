@@ -1,4 +1,6 @@
 #include "settings.h"
+#include <fstream>
+#include <istream>
 #include <iostream>
 
 KeyBind::KeyBind(std::string name, char key)
@@ -137,24 +139,6 @@ Category *DefaultGraphic()
     return graphic;
 }
 
-char GlobalSettings::getKey(std::string keyName)
-{
-    Setting *controls = getInstance()->getChildren()["Controls"];
-    Setting *movements = controls->getChildren()["Movement"];
-    Setting *operations = controls->getChildren()["Operations"];
-
-    Setting* key = movements->getChildren()[keyName];
-    if (!key)
-    {
-        key = operations->getChildren()[keyName];
-    }
-    if (!key)
-    {
-        return '<';
-    }
-    return key->getValue()[0];
-};
-
 int parseSettings(Category *settings, std::string filePath)
 {
     std::string line;
@@ -175,6 +159,35 @@ int parseSettings(Category *settings, std::string filePath)
     return 0;
 }
 
+Category *GlobalSettings::controls;
+Category *GlobalSettings::graphic;
+
+void GlobalSettings::load()
+{
+    GlobalSettings::controls = DefaultControls();
+    GlobalSettings::graphic = DefaultGraphic();
+    parseSettings(GlobalSettings::controls, "savedSettings\\controls.txt");
+    parseSettings(GlobalSettings::graphic, "savedSettings\\graphic.txt");
+}
+
+char GlobalSettings::getKey(std::string keyName)
+{
+    Setting *movements = GlobalSettings::controls->getChildren()["Movement"];
+    Setting *operations = GlobalSettings::controls->getChildren()["Operations"];
+
+    Setting* key = movements->getChildren()[keyName];
+    if (!key)
+    {
+        key = operations->getChildren()[keyName];
+    }
+    if (!key)
+    {
+        std::string error = "Received a non-existing key name: " + keyName;
+        throw std::invalid_argument(error);
+    }
+    return key->getValue()[0];
+}
+
 std::string &ltrim(std::string &str, std::string const &whitespace)
 {
     str.erase(0, str.find_first_not_of(whitespace));
@@ -190,9 +203,4 @@ std::string &rtrim(std::string &str, std::string const &whitespace)
 std::string &trim(std::string &str, std::string const &whitespace)
 {
     return ltrim(rtrim(str, whitespace), whitespace);
-}
-
-std::map<std::string, Setting *> Setting::getChildren()
-{
-    return std::map<std::string, Setting *>();
 }
