@@ -1,15 +1,8 @@
 #include "cursor.cpp"
 #include "grid.cpp"
+#include "settings.cpp"
 #include <cstdlib> // for rand and srand
 #include <ctime>   // for time
-
-#define KEY_UP 'w'
-#define KEY_DOWN 's'
-#define KEY_LEFT 'a'
-#define KEY_RIGHT 'd'
-#define ROTATE_LEFT 'q'
-#define ROTATE_RIGHT 'e'
-#define ENTER '\r'
 
 #pragma comment(lib, "winmm.lib")
 
@@ -27,7 +20,7 @@ public:
     /// @brief Display this state on the console.
     virtual void show() = 0;
     virtual void setup();
-    /// @brief Change the current context.  
+    /// @brief Change the current context.
     void setContext(Context *);
 };
 
@@ -67,6 +60,7 @@ public:
     void processInput(char) override;
 };
 
+// MARK: Quest
 /// @brief The main game.
 class Quest : public State
 {
@@ -84,6 +78,7 @@ public:
     void processInput(char input) override;
 };
 
+// MARK: Menu
 /// @brief Game state in which is possible to navigate through other game states
 /// and start a new game.
 class Menu : public State
@@ -93,6 +88,24 @@ class Menu : public State
 
     void highlightOption(int option);
     void resetOption(int option);
+
+public:
+    void setup() override;
+    void show() override;
+    void processInput(char input) override;
+};
+
+class Settings : public State
+{
+    int currentSection = 0;
+    int currentSectionPosition = 0;
+    Category *sections[2] = {DefaultControls(), DefaultGraphic()};
+    int sectionsCursorOffset[2] = {};
+    int numberOfSections = 2;
+
+    bool selected = false;
+
+    void highlightSection(int option);
 
 public:
     void setup() override;

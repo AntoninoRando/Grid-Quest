@@ -1,7 +1,7 @@
+#include "utils.cpp"
 #include <iostream>
 #include <optional>
 #include <cassert>
-#include "utils.cpp"
 #include <cstdlib> // for rand and srand
 #include <ctime>   // for time
 

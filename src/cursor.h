@@ -1,5 +1,5 @@
 #include <tuple>
-#pragma once // This header file has been included in mulitple file, thus this avoid error C2011
+// #pragma once // This header file has been included in mulitple file, thus this avoid error C2011
 
 /// @brief All possible cursor direction (right, bottom, left and top). They are
 /// defined in clockwise order.

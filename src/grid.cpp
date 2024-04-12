@@ -25,6 +25,7 @@ int Grid::contRemaining()
 {
     int count = 0;
     int strikes = 0;
+    
     for (int row = 9; row >= 0; row--)
     {
         if (strikes == 2)

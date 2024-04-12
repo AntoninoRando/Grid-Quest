@@ -1,9 +1,9 @@
 #include "utils.h"
-#include <iostream>
-#include <windows.h>
+
+using std::string;
 
 /// @brief Set the cursors position on the console.
-/// @param column The x coordinate in which the cursor will be placed. Starts 
+/// @param column The x coordinate in which the cursor will be placed. Starts
 /// at 0 on the left and increases towards right.
 /// @param row The y coordinate in which the cursor will be places. Starts at
 /// 0 on the top and increases towards the bottom.
@@ -16,13 +16,13 @@ void setCursorPosition(int column, int row)
 }
 
 /// @brief Clear the entire console.
-void clearConsole()
+void clearConsole(SHORT column, SHORT row)
 {
     HANDLE hStdOut;
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     DWORD count;
     DWORD cellCount;
-    COORD homeCoords = {0, 0};
+    COORD homeCoords = {column, row};
 
     hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hStdOut == INVALID_HANDLE_VALUE)
@@ -53,4 +53,9 @@ void clearConsole()
 
     /* Move the cursor home */
     SetConsoleCursorPosition(hStdOut, homeCoords);
+}
+
+int posMod(int value, int module)
+{
+    return (value % module + module) % module;
 }
