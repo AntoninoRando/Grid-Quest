@@ -1,2 +1,4 @@
-Selection = 7m
-Background = 0m
+Selection = 7
+Background = 0
+Primary cell = 41;1
+Secondary cell = 31;1

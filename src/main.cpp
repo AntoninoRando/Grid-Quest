@@ -8,6 +8,8 @@
 int main()
 {
     GlobalSettings::load();
+    std::cout << "\u001b[" + BG_COL + "m";
+
     Context game;
     game.transitionTo(new Opening);
 

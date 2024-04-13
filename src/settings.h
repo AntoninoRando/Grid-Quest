@@ -17,6 +17,10 @@
 #define MOD GlobalSettings::getKey("Module")
 #define MRG GlobalSettings::getKey("Concat")
 #define DIV GlobalSettings::getKey("Divide")
+#define SEL_COL GlobalSettings::getDecoration("Selection")
+#define BG_COL GlobalSettings::getDecoration("Background")
+#define PCELL_COL GlobalSettings::getDecoration("Primary cell")
+#define SCELL_COL GlobalSettings::getDecoration("Secondary cell")
 #define ENTER '\r'
 #define ESC 27
 
@@ -133,6 +137,7 @@ public:
     /// @param keyName The name associated with the wanted KeyBind.
     /// @return The character binded to the key.
     static char getKey(std::string keyName);
+    static std::string getDecoration(std::string decName);
     static void load();
 };
 

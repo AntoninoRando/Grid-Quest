@@ -136,6 +136,8 @@ Category *DefaultGraphic()
     Category *graphic = new Category("Graphic");
     graphic->Add(new Decoration("Selection", "7"));
     graphic->Add(new Decoration("Background", "0"));
+    graphic->Add(new Decoration("Primary cell", "4;41;1"));
+    graphic->Add(new Decoration("Secondary cell", "31;1"));
     return graphic;
 }
 
@@ -186,6 +188,17 @@ char GlobalSettings::getKey(std::string keyName)
         throw std::invalid_argument(error);
     }
     return key->getValue()[0];
+}
+
+std::string GlobalSettings::getDecoration(std::string decName)
+{
+    Setting* decoration = GlobalSettings::graphic->getChildren()[decName];
+    if (!decoration)
+    {
+        std::string error = "Received a non-existing decoration name: " + decName;
+        throw std::invalid_argument(error);
+    }
+    return decoration->getValue();
 }
 
 std::string &ltrim(std::string &str, std::string const &whitespace)

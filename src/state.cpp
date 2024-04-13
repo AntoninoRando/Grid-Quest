@@ -130,9 +130,9 @@ void Menu::highlightOption(int option) const
 {
     option %= sizeof(options) / sizeof(std::string);
     setCursorPosition(0, option);
-    std::cout << "   " << "\u001b[7m" << " "
+    std::cout << "   " << "\u001b[" + SEL_COL + "m" << " "
               << options[option]
-              << " " << "\u001b[0m";
+              << " " << "\u001b[0m\u001b[" + BG_COL + "m";
 }
 
 void Menu::resetOption(int option)
@@ -217,7 +217,7 @@ std:
     std::string code = selected ? "0" : "38;5;240";
     std::cout << "\u001b[" + code + "m"
               << sections[currentSection]->ToString()
-              << "\u001b[0m";
+              << "\u001b[0m\u001b[" + BG_COL + "m";
 }
 
 void Settings::processInput(char input)
@@ -259,9 +259,9 @@ void Settings::highlightSection(int section) const
     assert(section >= 0 && section <= numberOfSections);
 
     setCursorPosition(sectionsCursorOffset[section], 1);
-    std::cout << "\u001b[7m"
+    std::cout << "\u001b[" + SEL_COL + "m"
               << sections[section]->getName()
-              << "\u001b[0m";
+              << "\u001b[0m\u001b[" + BG_COL + "m";
 }
 
 void Opening::show() const

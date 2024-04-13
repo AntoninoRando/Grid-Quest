@@ -100,12 +100,11 @@ void Grid::show(int xS, int yS, int xE, int yE) const
         {
             if (row == yS && col == xS)
             {
-                cout << "\u001b[4m"
-                     << "\u001b[41;1m";
+                cout << "\u001b["+ PCELL_COL + "m";
             }
             else if (row == yE && col == xE)
             {
-                cout << "\u001b[31;1m";
+                cout << "\u001b[" + SCELL_COL + "m";
             }
 
             optional<int> cell = grid[row][col];
@@ -117,7 +116,7 @@ void Grid::show(int xS, int yS, int xE, int yE) const
             {
                 cout << ' ';
             }
-            cout << "\u001b[0m\t";
+            cout << "\u001b[0m\u001b[" + BG_COL + "m" << "\t";
         }
         cout << '\n';
     }
