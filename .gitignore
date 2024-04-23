@@ -3,4 +3,6 @@
 **.exe
 **.ilk
 **.o
+**.pdf
+/db
 /.vscode

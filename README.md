@@ -19,21 +19,59 @@ Be careful! Every new challenge you start with 10 life points but every operatio
 
 ### Functional Requirements
 
-1. #### User Registration
+1. #### Download the Application
 
-    The system should allow users to create 3 local accounts by providing distinct usernames.
+    The application can be downloaded directly from the GitHub page. That page contains an executable file that is the playable game.
 
-    There is no verification process since the account does not contain important information.
+2. #### Sign-up Users
 
-2. #### Settings Personalization
+    The system shall allow users to create 3 local profiles by providing distinct usernames.
 
-    The system should allow users to edit input and visual settings in order to personalize the game experience.
+    On the first login, the game asks the user's first profile username.
 
-    The settings should be saved between session and they should be global (i.e. not linked to a single account but linked to the local host).
+    There is no verification process since the profile does not contain important information.
 
-3. #### Track Progress
+3. #### Change Profiles
 
-    The system should allow users to track their progress (i.e. the history of game won/lost, the highscore, and so on.)
+    The system shall allow users to switch profile in any moment while in the menu.
+
+4. #### Delete Profiles
+
+    The system shall allow users to delete their profiles in any moment, except when they have only one profile left.
+
+    When a profile is deleted, so are their associated progress and suspended game.
+
+5. #### Change Settings
+
+    The system shall allow users to edit input and visual settings in order to personalize the game experience.
+
+    The settings configuration is unique for machine (i.e. global to a every profile, saved in the local host).
+
+6. #### Track Progress
+
+    The system shall allow users to track their progress (i.e. the history of game won/lost, the highscore, and so on.)
+
+    The progress is relative to a profile.
+
+7. #### Interrupt Game
+
+    The system shall allow user to interrupt a game. When a game is interrupted, the user can decide to discard it and start a new one from the menu.
+
+8. #### Single Player
+
+    The system shall run offline and with no multiplayer.
+
+### Non-functional Requirements
+
+1. The system shall not be strict in secure, since no important data are required and every progress is saved locally.
+
+2. The system UI shall be high personalizable and easy to change.
+
+3. The system UI shall be easy to navigate and understand.
+
+4. The game should be challenging.
+
+5. The progress page should be exhaustive.
 
 ### Use-Case Diagram
 
@@ -41,11 +79,29 @@ Be careful! Every new challenge you start with 10 life points but every operatio
 
 ## System Requirements
 
-### Non-Functional Requirements
+### Functional Requirements
 
 1. #### Operating System
 
     Windows 7, 8, or 10;
+
+2. The system aesthetics and controls shall change immediately whenever any settings is modified and saved.
+
+3. The system shall updated the time spent while gaming every minute.
+
+4. After a game is completed, the system shall update the user score with a new game and its result.
+
+5. When a game is interrupted, the system shall save its state even for an immediate re-use.
+
+6. While gaming, the system should track what user does after any input of interest.
+
+### Non-Functional Requirements
+
+1. The game shall run smooth without flickerings. In other words, with high and constant performances.
+
+2. The system shall be easy and fast to run since no expensive setup is required.
+
+3. The system shall run in any windows system (8+) without requiring any change.
 
 ### Architectural Diagram
 
