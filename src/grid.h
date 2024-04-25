@@ -13,11 +13,13 @@ class Grid
     /// @param x The x coordinate (column) of the hole.
     /// @param y The y coordinate (row) of the hole.
     void ajustHole(int x, int y);
-
     /// @brief Perform positive module operator between x, y and xMin, yMin
     /// respectively, where xMin is the maximum column with a value at row y, and
     /// yMin is the maximum row with a value at column x.
     std::tuple<int, int, int, int> modCursor(int, int, int, int) const;
+    int lPadding = 2;
+    int rPadding = 2;
+    int cellSize = 1;
 
 public:
     void show(int, int, int, int) const;

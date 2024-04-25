@@ -6,6 +6,8 @@
 #include "grid.h"
 #include "utils.h"
 
+using opSet = std::optional<std::list<Setting *>::const_iterator>;
+
 class Context;
 
 /// @brief A state of the game (e.g., Menu, Profile, New Game).
@@ -61,7 +63,6 @@ public:
     void processInput(char) override;
 };
 
-// MARK: Quest
 /// @brief The main game.
 class Quest : public State
 {
@@ -79,7 +80,6 @@ public:
     void processInput(char input) override;
 };
 
-// MARK: Menu
 /// @brief Game state in which is possible to navigate through other game states
 /// and start a new game.
 class Menu : public State
@@ -105,10 +105,16 @@ class Settings : public State
         GlobalSettings::graphic};
     int sectionsCursorOffset[2] = {};
     int numberOfSections = 2;
-
     bool selected = false;
+    int currentSetting = 0;
+    std::list<Setting *> settings[2] = {
+        GlobalSettings::controls->GetChildrenList(),
+        GlobalSettings::graphic->GetChildrenList()};
+    opSet selectedSetting = {};
+    std::string error = "";
 
     void highlightSection(int option) const;
+    void highlightSetting(int ord, Setting* setting) const;
 
 public:
     void setup() override;

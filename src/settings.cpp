@@ -2,6 +2,9 @@
 #include <fstream>
 #include <istream>
 #include <iostream>
+#include <conio.h>
+#include <regex>
+#include <sstream>
 
 KeyBind::KeyBind(std::string name, char key)
 {
@@ -9,15 +12,39 @@ KeyBind::KeyBind(std::string name, char key)
     this->value_ = key;
 }
 
-std::string KeyBind::Change(std::string newKey)
+std::string KeyBind::Change(std::string key)
 {
-    if (newKey.size() != 1)
-    {
+    if (key.size() != 1)
         return "E: The new value for " + name_ + " is not a character!";
+
+    Setting *topParent = parent_;
+
+    if (topParent == nullptr)
+    {
+        value_ = key[0];
+        return "";
     }
 
-    value_ = newKey[0];
+    while (topParent->GetParent() != nullptr)
+        topParent = topParent->GetParent();
+
+    for (auto c : topParent->GetChildrenList())
+    {
+        if (c == this)
+            continue;
+        ///@todo ADD CHECK THAT c IS A KEYBINDING
+        if (c->getValue() == key)
+            return "E: This key is already in use for " + c->getName();
+    }
+
+    value_ = key[0];
     return "";
+}
+
+std::string KeyBind::ChangeWithInput()
+{
+    char newKey = _getch();
+    return Change(std::string(1, newKey));
 }
 
 std::string KeyBind::ToString() const
@@ -31,10 +58,42 @@ Decoration::Decoration(std::string name, std::string code)
     this->value_ = code;
 }
 
-std::string Decoration::Change(std::string newCode)
+std::string Decoration::Change(std::string newValue)
 {
-    value_ = newCode;
+    if (newValue.size() < 1)
+        return "E: The new value for " + name_ + " is empty!";
+
+    std::stringstream ss(newValue);
+    std::string token;
+    std::string adjustedCode = "";
+
+    while (getline(ss, token, ';'))
+    {
+        if (token.size() == 0)
+            return "E: Can't have two semicolons ; attached!";
+        try
+        {
+            int code = std::stoi(token);
+            if (code < 0 || code > 255)
+                return "E: Invalid code in the sequence!";
+            adjustedCode += std::to_string(code) + ";";
+        }
+        catch (const std::invalid_argument &_)
+        {
+            return "E: invalid non-digit characters!";
+        }
+    }
+
+    adjustedCode.pop_back(); // Remove last ; character, added in the while
+    value_ = adjustedCode;
     return "";
+}
+
+std::string Decoration::ChangeWithInput()
+{
+    std::string line;
+    std::getline(std::cin, line);
+    return Change(line);
 }
 
 std::string Decoration::ToString() const
@@ -76,6 +135,13 @@ std::string Category::Change(std::string newOption)
 
     std::string changeResult = setting.value()->Change(ltrim(value));
     return changeResult;
+}
+
+std::string Category::ChangeWithInput()
+{
+    std::string line;
+    std::getline(std::cin, line);
+    return Change(line);
 }
 
 std::string Category::ToString() const
@@ -138,6 +204,8 @@ Category *DefaultGraphic()
     graphic->Add(new Decoration("Background", "0"));
     graphic->Add(new Decoration("Primary cell", "4;41;1"));
     graphic->Add(new Decoration("Secondary cell", "31;1"));
+    graphic->Add(new Decoration("Even cells", "7"));
+    graphic->Add(new Decoration("Odd cells", "0"));
     return graphic;
 }
 
@@ -150,7 +218,10 @@ int parseSettings(Category *settings, std::string filePath)
         std::string section;
         while (getline(settingsFile, line))
         {
-            settings->Change(line);
+            std::string error = settings->Change(line);
+
+            if (error.length() > 0 && error[0] == 'E')
+                throw std::invalid_argument(error);
         }
         settingsFile.close();
     }
@@ -177,7 +248,7 @@ char GlobalSettings::getKey(std::string keyName)
     Setting *movements = GlobalSettings::controls->getChildren()["Movement"];
     Setting *operations = GlobalSettings::controls->getChildren()["Operations"];
 
-    Setting* key = movements->getChildren()[keyName];
+    Setting *key = movements->getChildren()[keyName];
     if (!key)
     {
         key = operations->getChildren()[keyName];
@@ -192,7 +263,7 @@ char GlobalSettings::getKey(std::string keyName)
 
 std::string GlobalSettings::getDecoration(std::string decName)
 {
-    Setting* decoration = GlobalSettings::graphic->getChildren()[decName];
+    Setting *decoration = GlobalSettings::graphic->getChildren()[decName];
     if (!decoration)
     {
         std::string error = "Received a non-existing decoration name: " + decName;

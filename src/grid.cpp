@@ -98,25 +98,30 @@ void Grid::show(int xS, int yS, int xE, int yE) const
     {
         for (int col = 0; col < 10; col++)
         {
+            std::string color;
             if (row == yS && col == xS)
-            {
-                cout << "\u001b["+ PCELL_COL + "m";
-            }
+                color = PCELL_COL;
             else if (row == yE && col == xE)
-            {
-                cout << "\u001b[" + SCELL_COL + "m";
-            }
+                color = SCELL_COL;
+            else if ((10 * row + col) % 2 == 0)
+                color = ECELLS_COL;
+            else
+                color = OCELLS_COL;
 
             optional<int> cell = grid[row][col];
             if (cell.has_value())
             {
+                cout << "\u001b[" + color + "m";
+                cout << std::string(2, ' ');
                 cout << cell.value();
+                cout << std::string(2, ' ');
             }
             else
             {
-                cout << ' ';
+                int tot = lPadding + cellSize + rPadding;
+                cout << std::string(5, ' ');
             }
-            cout << "\u001b[0m\u001b[" + BG_COL + "m" << "\t";
+            cout << "\u001b[0m\u001b[" + BG_COL + "m";
         }
         cout << '\n';
     }
@@ -157,9 +162,7 @@ optional<int> Grid::applyInput(char input, int xS, int yS, int xE, int yE)
     int zeros = 1;
 
     if (!v1.has_value() || !v2.has_value())
-    {
         return optional<int>{};
-    }
 
     int diff = abs(v1.value() - v2.value());
 
@@ -174,9 +177,7 @@ optional<int> Grid::applyInput(char input, int xS, int yS, int xE, int yE)
     else if (input == DIV)
     {
         if (v2.value() == 0 || v1.value() % v2.value() != 0)
-        {
             return optional<int>{};
-        }
         grid[yS][xS] = v1.value() / v2.value();
     }
     else if (input == MRG)
@@ -184,9 +185,7 @@ optional<int> Grid::applyInput(char input, int xS, int yS, int xE, int yE)
         sign = (v1.value() < 0 || v2.value() < 0) ? -1 : 1;
         zeros = 10;
         while (zeros < abs(v2.value()))
-        {
             zeros *= 10;
-        }
         grid[yS][xS] = sign * (abs(v1.value()) * zeros + abs(v2.value()));
     }
     else
