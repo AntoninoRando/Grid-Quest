@@ -4,6 +4,7 @@
 **.ilk
 **.o
 **.pdf
+/.markdownlint.json
 /db
 /requirements
 /build

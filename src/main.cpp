@@ -1,22 +1,21 @@
 #include "state.h"
 #include "settings.h"
 #include <conio.h>
-#include <hiredis.h>
+#include "monitors.h"
 
-// We use wasd for movement because the _getchr() return twice with arrows keys:
+// We use W-A-S-D for movement because the _getchr() return twice with arrows keys:
 // https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/078sfkak(v=vs.100)?redirectedfrom=MSDN
 
 int main()
 {
-    GlobalSettings::load();
-    std::cout << "\u001b[" + BG_COL + "m";
-
-    redisContext *c = redisConnect("127.0.0.1", 6379);
-    if (c != nullptr && c->err)
+    if (!Redis::connect("127.0.0.1", 6379))
     {
-        std::cout << "ERROR Trying to connect to redis server";
+        std::cout << "ERROR: Couldn't connect to the redis server.";
         return 1;
     }
+
+    GlobalSettings::load();
+    std::cout << "\u001b[" + BG_COL + "m";
 
     Context game;
     game.transitionTo(new Opening);

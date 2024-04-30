@@ -6,6 +6,7 @@ add_executable(${PROJECT_NAME}
     state.cpp
     utils.cpp
     menu.cpp
+    monitors.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE hiredis)
