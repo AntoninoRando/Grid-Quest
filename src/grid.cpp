@@ -7,7 +7,7 @@
 
 using std::optional, std::cout;
 
-void Grid::ajustHole(int x, int y)
+void Grid::adjustHole(int x, int y)
 {
     // Fall from above.
     while (y > 0 && !grid[y][x].has_value())
@@ -36,9 +36,7 @@ int Grid::contRemaining() const
     for (int row = 9; row >= 0; row--)
     {
         if (strikes == 2)
-        {
             break;
-        }
 
         for (int col = 0; col < 10; col++)
         {
@@ -59,9 +57,7 @@ int Grid::contRemaining() const
 optional<int> Grid::getCell(int x, int y)
 {
     if (x < 0 || x > 9 || y < 0 || y > 9)
-    {
         return optional<int>{};
-    }
     return grid[y][x];
 }
 
@@ -69,14 +65,12 @@ std::tuple<int, int, int, int> Grid::modCursor(int xS, int yS, int xE, int yE) c
 {
     int xM = 0;
     while (xM < 10 && grid[9][xM].has_value())
-    {
         xM += 1;
-    }
+
     int yM = 0;
     while (yM < 10 && !grid[yM][0].has_value())
-    {
         yM += 1;
-    }
+
     yM = 10 - yM;
     xS = (xS % xM + xM) % xM;
     xE = (xE % xM + xM) % xM;
@@ -141,9 +135,7 @@ void Grid::fill(float emptiness = 0.2)
             remaining -= 1;
 
             if (remaining == 0)
-            {
                 return;
-            }
         }
     }
 }
@@ -192,7 +184,7 @@ optional<int> Grid::applyInput(char input, int xS, int yS, int xE, int yE)
         return optional<int>{};
 
     grid[yE][xE] = optional<int>{};
-    ajustHole(xE, yE);
+    adjustHole(xE, yE);
 
     return diff;
 }

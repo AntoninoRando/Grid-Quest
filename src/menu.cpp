@@ -21,9 +21,7 @@ void Menu::setup()
 {
     clearConsole();
     for (const auto option : options)
-    {
         std::cout << option << '\n';
-    }
     highlightOption(currentOption);
 }
 
@@ -37,13 +35,9 @@ void Menu::processInput(char input)
     resetOption(currentOption);
 
     if (input == MOVE_UP)
-    {
         currentOption -= 1;
-    }
     else if (input == MOVE_DOWN)
-    {
         currentOption += 1;
-    }
     else if (input == ENTER)
     {
         if (options[currentOption] == "Play")
@@ -77,9 +71,7 @@ void Settings::setup()
 
     std::cout << '\n';
     for (int i = 0; i < 36; i++)
-    {
         std::cout << "—";
-    }
     std::cout << '\n';
 }
 
@@ -91,9 +83,7 @@ void Settings::show() const
 
     std::cout << "\u001b[" + BG_COL + (!selected ? ";2" : "") + "m";
     for (auto c : settings[currentSection])
-    {
         std::cout << c->getName() << ": " << c->getValue() << "\n";
-    }
     std::cout << "\u001b[0m\u001b[" + BG_COL + "m";
 
     if (selectedSetting.has_value())

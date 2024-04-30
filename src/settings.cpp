@@ -110,28 +110,20 @@ std::string Category::Change(std::string newOption)
 {
     size_t i = newOption.find('=');
     if (i == std::string::npos)
-    {
         return "E: newOption does not have an = character!";
-    }
 
     std::string settingName = newOption.substr(0, i);
     std::string value = newOption.substr(i + 1);
 
     if (settingName.empty())
-    {
         return "E: newOption does not contain the setting!";
-    }
     if (value.empty())
-    {
         return "E: newOption does not contain a value!";
-    }
 
     std::optional<Setting *> setting = findSetting(trim(settingName));
 
     if (!setting.has_value())
-    {
         return "E: this category hasn't the desired setting!";
-    }
 
     std::string changeResult = setting.value()->Change(ltrim(value));
     return changeResult;
@@ -148,18 +140,14 @@ std::string Category::ToString() const
 {
     std::string result = name_ + "\n\n";
     for (const auto &[_, c] : children_)
-    {
         result += c->ToString() + "\n";
-    }
     return result;
 }
 
 std::optional<Setting *> Category::findSetting(std::string settingName)
 {
     if (children_.count(settingName))
-    {
         return std::optional<Setting *>{children_[settingName]};
-    }
 
     for (auto &[_, c] : children_)
     {
@@ -167,9 +155,7 @@ std::optional<Setting *> Category::findSetting(std::string settingName)
         {
             std::optional<Setting *> result = c->findSetting(settingName);
             if (result.has_value())
-            {
                 return result;
-            }
         }
     }
     return std::optional<Setting *>{};
@@ -226,9 +212,7 @@ int parseSettings(Category *settings, std::string filePath)
         settingsFile.close();
     }
     else
-    {
         return 1;
-    }
     return 0;
 }
 
@@ -239,8 +223,8 @@ void GlobalSettings::load()
 {
     GlobalSettings::controls = DefaultControls();
     GlobalSettings::graphic = DefaultGraphic();
-    parseSettings(GlobalSettings::controls, "savedSettings\\controls.txt");
-    parseSettings(GlobalSettings::graphic, "savedSettings\\graphic.txt");
+    parseSettings(GlobalSettings::controls, "etc/savedSettings/controls.txt");
+    parseSettings(GlobalSettings::graphic, "etc/savedSettings/graphic.txt");
 }
 
 char GlobalSettings::getKey(std::string keyName)
@@ -250,9 +234,7 @@ char GlobalSettings::getKey(std::string keyName)
 
     Setting *key = movements->getChildren()[keyName];
     if (!key)
-    {
         key = operations->getChildren()[keyName];
-    }
     if (!key)
     {
         std::string error = "Received a non-existing key name: " + keyName;

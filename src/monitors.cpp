@@ -10,10 +10,26 @@ bool Redis::connect(const char *ip, int port)
     return true;
 }
 
-void *Redis::runCommand(const char *format, ...)
+void *Redis::run(const char *format, ...)
 {
     void *r = redisCommand(context, format);
     freeReplyObject(r);
     return r;
-    return nullptr;
+}
+
+void TimePlayed::update()
+{
+    Redis::run("INCRBY playtime %d", totalSeconds);
+}
+
+void GamesPlayed::update()
+{
+    Redis::run("INCRBY started %d", started);
+    Redis::run("INCRBY won %d", won);
+    Redis::run("INCRBY lost %d", lost);
+    Redis::run("INCRBY interrupted %d", interrupted);
+    started = 0;
+    won = 0;
+    lost = 0;
+    interrupted = 0;
 }

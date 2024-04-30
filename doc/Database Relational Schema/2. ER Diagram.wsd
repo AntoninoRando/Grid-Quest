@@ -1,0 +1,40 @@
+@startuml database-ER
+
+' Entities
+
+object Profile {
+    {static} nickname: str
+    creation: date
+}
+
+object Quest {
+    quest_num: int
+    final_num: int 0..1
+    start: timestamp
+    end: timestamp
+    hp: int
+}
+
+object Cell {
+    val: int
+    x: cell_cord
+    y: cell_cord
+}
+
+object Operation {
+    type: operation
+    ord: int > 0
+}
+
+' Relationship
+
+Profile "0..*" -- "1..1" Quest : plays
+
+Quest "0..1\nnext" -- "0..1\nprev" Quest : adventure
+Quest "2..100" -- "0..*" Cell : cell_grid
+
+Operation "0..*" -- "0..*" Quest : op_quest
+Operation "1..1" -- "0..*" Cell : start
+Operation "1..1" -- "0..*" Cell : end
+
+@enduml

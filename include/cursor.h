@@ -1,4 +1,4 @@
-// #pragma once // This header file has been included in mulitple file, thus this avoid error C2011
+// #pragma once // This header file has been included in multiple file, thus this avoid error C2011
 #ifndef CURSOR_H_
 #define CURSOR_H_
 
@@ -42,7 +42,7 @@ public:
     void rotateRight();
 };
 
-/// @brief The user cursor on the Grid. By deafult, it spawn at the
+/// @brief The user cursor on the Grid. By default, it spawn at the
 /// bottom-left corner of the Grid.
 class Cursor
 {

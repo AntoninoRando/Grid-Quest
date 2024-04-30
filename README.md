@@ -55,7 +55,7 @@ This section gathers some user requirements for the project.
 
 <details><summary>Use-Case Diagrams</summary>
 
-![use-case-diagram](diagrams\out\usecase.png "Use case diagram")
+![use-case-diagram](doc/Diagrams/out/usecase.png "Use case diagram")
 
 TODO Add another
 
@@ -87,11 +87,13 @@ TODO Add another
 
 4. The game shall be run at any time and for any duration of time without any problem and system overloading.
 
+5. The game should never have invalid settings. In case of wrong input or settings file, the system should run anyway with a default setting. Settings can't contrast each others.
+
 ### Diagrams
 
 <details><summary>Architectural Diagram</summary>
 
-![architecture](diagrams\out\architecture.png "Architectural Diagram")
+![architecture](doc/Diagrams/out/architecture.png "Architectural Diagram")
 
 </details>
 
@@ -99,7 +101,7 @@ TODO Add another
 
 #### Quest
 
-![architecture](diagrams\out\questactivity.png "Architectural Diagram")
+![architecture](doc/Diagrams/out/questactivity.png "Architectural Diagram")
 
 </details>
 
@@ -107,19 +109,19 @@ TODO Add another
 
 #### Menu
 
-![architecture](diagrams\out\state-diagram(menu).png "Architectural Diagram")
+![architecture](doc/Diagrams/out/state-diagram(menu).png "Architectural Diagram")
 
 </details>
 
 <details><summary>Message Sequence Charts</summary>
 
-![architecture](diagrams\out\message-sequence-chart.png "Architectural Diagram")
+![architecture](doc/Diagrams/out/message-sequence-chart.png "Architectural Diagram")
 
 </details>
 
 ## Implementation
 
-The project has been written in C++, using the "hiredis" library for the Redis connections.
+The project has been written in C++, using the `hiredis` library for the Redis connections.
 
 ## Software Structure
 

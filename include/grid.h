@@ -12,7 +12,7 @@ class Grid
     /// after the fall-down. This shifting process occurs from top to bottom.
     /// @param x The x coordinate (column) of the hole.
     /// @param y The y coordinate (row) of the hole.
-    void ajustHole(int x, int y);
+    void adjustHole(int x, int y);
     /// @brief Perform positive module operator between x, y and xMin, yMin
     /// respectively, where xMin is the maximum column with a value at row y, and
     /// yMin is the maximum row with a value at column x.

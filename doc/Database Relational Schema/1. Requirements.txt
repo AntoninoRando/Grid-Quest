@@ -1,0 +1,23 @@
+Profile
+    - username
+    - time spent playing
+    - creation time
+    {} -> quest started
+    {} -> quest completed
+    {} -> quest win-rate = quest faced / quest won
+    {} -> highest quest score (final hp)
+Quest
+    - quest number (cell)
+    - grid
+    - list of operations performed, in order
+        - cell involved
+        - operation
+        (ignore movements)
+    - time taken
+    - if won, lost, or dropped
+    - hp on end
+Grid
+    - cells
+Cell
+    - value
+    - coordinates
