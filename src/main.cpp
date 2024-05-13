@@ -1,7 +1,9 @@
 #include "state.h"
 #include "settings.h"
-#include <conio.h>
 #include "monitors.h"
+#include <conio.h>
+#include <chrono>
+#include <sstream>
 
 // We use W-A-S-D for movement because the _getchr() return twice with arrows keys:
 // https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/078sfkak(v=vs.100)?redirectedfrom=MSDN
@@ -25,7 +27,25 @@ int main()
 
     while (true)
     {
+        auto start = std::chrono::system_clock::now();
         game.show();
-        game.processInput(_getch());
+        auto end = std::chrono::system_clock::now();
+        auto showTime = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
+        std::stringstream command;
+        command << "show_time " << showTime << "ms";
+        Redis::putInStream(command.str());
+
+        char input = _getch();
+
+        std::string redisCommand("input ");
+        redisCommand.push_back(input);
+        void *r = Redis::putInStream(redisCommand);
+        if (r == NULL)
+        {
+            std::cout << Redis::context->errstr;
+            return 1;
+        }
+
+        game.processInput(input);
     }
 }

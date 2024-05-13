@@ -1,7 +1,8 @@
 #include "utils.h"
+#include "monitors.h"
 #include <iostream>
-
-using std::string;
+#include <chrono>
+#include <sstream>
 
 /// @brief Set the cursors position on the console.
 /// @param column The x coordinate in which the cursor will be placed. Starts
@@ -19,6 +20,8 @@ void setCursorPosition(int column, int row)
 /// @brief Clear the entire console.
 void clearConsole(SHORT column, SHORT row)
 {
+    auto start = std::chrono::system_clock::now();
+    
     HANDLE hStdOut;
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     DWORD count;
@@ -54,6 +57,12 @@ void clearConsole(SHORT column, SHORT row)
 
     /* Move the cursor home */
     SetConsoleCursorPosition(hStdOut, homeCoords);
+
+    auto end = std::chrono::system_clock::now();
+    auto clearTime = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
+    std::stringstream command;
+    command << "cclear_time " << clearTime << "ms";
+    Redis::putInStream(command.str());
 }
 
 int posMod(int value, int module)

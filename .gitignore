@@ -4,6 +4,7 @@
 **.ilk
 **.o
 **.pdf
+**.bat
 /.markdownlint.json
 /requirements
 /build

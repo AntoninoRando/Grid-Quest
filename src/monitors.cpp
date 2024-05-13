@@ -1,6 +1,7 @@
 #include "monitors.h"
 
 redisContext *Redis::context;
+void *Redis::lastReply;
 
 bool Redis::connect(const char *ip, int port)
 {
@@ -12,24 +13,14 @@ bool Redis::connect(const char *ip, int port)
 
 void *Redis::run(const char *format, ...)
 {
-    void *r = redisCommand(context, format);
-    freeReplyObject(r);
-    return r;
+    freeReplyObject(Redis::lastReply);
+    Redis::lastReply = redisCommand(context, format);
+    return Redis::lastReply;
 }
 
-void TimePlayed::update()
+void *Redis::putInStream(std::string command)
 {
-    Redis::run("INCRBY playtime %d", totalSeconds);
-}
-
-void GamesPlayed::update()
-{
-    Redis::run("INCRBY started %d", started);
-    Redis::run("INCRBY won %d", won);
-    Redis::run("INCRBY lost %d", lost);
-    Redis::run("INCRBY interrupted %d", interrupted);
-    started = 0;
-    won = 0;
-    lost = 0;
-    interrupted = 0;
+    std::string s("XADD ");
+    s.append(STREAM_NAME).append(" * ").append(command);
+    return Redis::run(s.c_str());
 }

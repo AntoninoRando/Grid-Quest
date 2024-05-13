@@ -133,14 +133,24 @@ The project has been written in C++, using the `hiredis` library for the Redis c
 
 Monitors for the following requirements has been implemented (first 3 are non-functional, last 3 are functional):
 
-1. The game should be challenging. (The monitor checks the users stats to determine whether the game is indeed hard for new-user, and fairly challenging for experienced users.)
+1. The game should be challenging.
 
-2. The game shall run smooth. (The monitor checks the time required to complete the main operations and determines whether the system is updating too slow.)
+    The monitor checks the users stats to determine whether the game is indeed hard for new-user, and fairly challenging for experienced users.
 
-3. The game shall run as long as desired. (The monitor checks whether the game closes unexpectedly and whether it requires more memory the more time it runs.)
+2. The game shall run smooth.
 
-4. Changes to settings shall be applied immediately.
+    The monitor checks the time required to complete the main operations and determines whether the system is updating too slow.
 
-5. Track user inputs.
+3. The game shall run as long as desired.
+
+    The monitor checks whether the game closes unexpectedly and whether it requires more memory the more time it runs.
+
+4. Changes to settings shall be applied immediately
+
+    The monitor checks whether a non-existing input produces some effects (i.e., before an input mapping changed, the old input was still usable)
+
+5. (**Event Sourcing**) Track user inputs.
+
+    The user inputs are tracked to determine whether the user is trying to achieve some operations in other ways, thus revealing that the user inputs are misleading.
 
 6. Track user stats.
