@@ -10,7 +10,7 @@
 
 int main()
 {
-    if (!Redis::connect("127.0.0.1", 6379))
+    if (!Redis::get().connect("127.0.0.1", 6379))
     {
         std::cout << "ERROR: Couldn't connect to the redis server.";
         return 1;
@@ -30,21 +30,13 @@ int main()
         auto start = std::chrono::system_clock::now();
         game.show();
         auto end = std::chrono::system_clock::now();
-        auto showTime = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
-        std::stringstream command;
-        command << "show_time " << showTime << "ms";
-        Redis::putInStream(command.str());
+        auto showTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        Redis::get() << "show_time " << showTime << "ms";
+        Redis::get().push();
 
         char input = _getch();
-
-        std::string redisCommand("input ");
-        redisCommand.push_back(input);
-        void *r = Redis::putInStream(redisCommand);
-        if (r == NULL)
-        {
-            std::cout << Redis::context->errstr;
-            return 1;
-        }
+        Redis::get() << "input " << input;
+        Redis::get().push();
 
         game.processInput(input);
     }

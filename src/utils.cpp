@@ -21,7 +21,7 @@ void setCursorPosition(int column, int row)
 void clearConsole(SHORT column, SHORT row)
 {
     auto start = std::chrono::system_clock::now();
-    
+
     HANDLE hStdOut;
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     DWORD count;
@@ -59,10 +59,9 @@ void clearConsole(SHORT column, SHORT row)
     SetConsoleCursorPosition(hStdOut, homeCoords);
 
     auto end = std::chrono::system_clock::now();
-    auto clearTime = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
-    std::stringstream command;
-    command << "cclear_time " << clearTime << "ms";
-    Redis::putInStream(command.str());
+    auto clearTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    Redis::get() << "cclear_time " << clearTime << "ms";
+    Redis::get().push();
 }
 
 int posMod(int value, int module)
