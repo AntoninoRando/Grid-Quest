@@ -10,22 +10,28 @@ bool Redis::connect(const char *ip, int port)
 
 void *Redis::run(const char *format, ...)
 {
-    freeReplyObject(Redis::lastReply);
-    Redis::lastReply = redisCommand(context, format);
-    return Redis::lastReply;
+    freeReplyObject(lastReply);
+    lastReply = redisCommand(context, format);
+    if (lastReply == NULL)
+    {
+        std::string error("ERROR:BAD-COMMAND ");
+        error.append(context->errstr);
+        putInStream(error);
+    }
+    return lastReply;
 }
 
 void *Redis::putInStream(std::string command)
 {
     std::string s("XADD ");
     s.append(STREAM_NAME).append(" * ").append(command);
-    return Redis::run(s.c_str());
+    return run(s.c_str());
 }
 
 void *Redis::push()
 {
-    void* result = putInStream(get().streamCommand_.str());
-    get().streamCommand_.str(""); // Clear the stream
-    get().streamCommand_.clear(); // Clear any error flags
+    void* result = putInStream(streamCommand_.str());
+    streamCommand_.str(""); // Clear the stream
+    streamCommand_.clear(); // Clear any error flags
     return result;
 }

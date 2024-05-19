@@ -31,7 +31,7 @@
 class Setting
 {
 protected:
-    Setting *parent_;
+    Setting *parent_ = nullptr;
     std::string name_;
     std::string value_;
 
@@ -39,15 +39,15 @@ public:
     virtual ~Setting() {}
     void SetParent(Setting *parent)
     {
-        this->parent_ = parent;
+        parent_ = parent;
     }
     Setting *GetParent() const
     {
-        return this->parent_;
+        return parent_;
     }
     std::string getName() const
     {
-        return this->name_;
+        return name_;
     }
     std::string getValue() const
     {

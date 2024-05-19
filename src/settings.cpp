@@ -1,4 +1,5 @@
 #include "settings.h"
+#include "monitors.h"
 #include <fstream>
 #include <istream>
 #include <iostream>
@@ -8,20 +9,31 @@
 
 KeyBind::KeyBind(std::string name, char key)
 {
-    this->name_ = name;
-    this->value_ = key;
+    name_ = name;
+    value_ = key;
 }
 
 std::string KeyBind::Change(std::string key)
 {
+    std::string nameNoSpace = std::regex_replace(name_, std::regex(" "), "-");
+    std::string keyNoSpace = std::regex_replace(key, std::regex(" "), "-");
+    Redis::get() << "key-bind-change " << nameNoSpace << " "
+                 << "new-value " << keyNoSpace << " ";
+
     if (key.size() != 1)
-        return "E: The new value for " + name_ + " is not a character!";
+    {
+        std::string error("New-value-is-not-a-character");
+        Redis::get() << "error " << error;
+        Redis::get().push();
+        return "E: " + error;
+    }
 
     Setting *topParent = parent_;
 
     if (topParent == nullptr)
     {
         value_ = key[0];
+        Redis::get().push();
         return "";
     }
 
@@ -34,10 +46,17 @@ std::string KeyBind::Change(std::string key)
             continue;
         ///@todo ADD CHECK THAT c IS A KEYBINDING
         if (c->getValue() == key)
-            return "E: This key is already in use for " + c->getName();
+        {
+            std::string error("Key-already-in-use");
+            // error.append(c->getName());
+            Redis::get() << "error " << error;
+            Redis::get().push();
+            return "E: ";
+        }
     }
 
     value_ = key[0];
+    Redis::get().push();
     return "";
 }
 
@@ -54,14 +73,25 @@ std::string KeyBind::ToString() const
 
 Decoration::Decoration(std::string name, std::string code)
 {
-    this->name_ = name;
-    this->value_ = code;
+    name_ = name;
+    value_ = code;
 }
 
 std::string Decoration::Change(std::string newValue)
 {
+    std::string nameNoSpace = std::regex_replace(name_, std::regex(" "), "-");
+    std::string valueNoSpace = std::regex_replace(newValue, std::regex(" "), "-");
+
+    Redis::get() << "decoration-change " << nameNoSpace << " "
+                 << "new-value " << valueNoSpace << " ";
+
     if (newValue.size() < 1)
-        return "E: The new value for " + name_ + " is empty!";
+    {
+        std::string error("Empty-value");
+        Redis::get() << "error " << error;
+        Redis::get().push();
+        return "E: " + error;
+    }
 
     std::stringstream ss(newValue);
     std::string token;
@@ -70,22 +100,36 @@ std::string Decoration::Change(std::string newValue)
     while (getline(ss, token, ';'))
     {
         if (token.size() == 0)
-            return "E: Can't have two semicolons ; attached!";
+        {
+            std::string error("Two-semicolons-attached");
+            Redis::get() << "error " << error;
+            Redis::get().push();
+            return "E: " + error;
+        }
         try
         {
             int code = std::stoi(token);
             if (code < 0 || code > 255)
-                return "E: Invalid code in the sequence!";
+            {
+                std::string error("Invalid-code-in-the-sequence");
+                Redis::get() << "error " << error;
+                Redis::get().push();
+                return "E: " + error;
+            }
             adjustedCode += std::to_string(code) + ";";
         }
         catch (const std::invalid_argument &_)
         {
-            return "E: invalid non-digit characters!";
+            std::string error("Non-digit-characters");
+            Redis::get() << "error " << error;
+            Redis::get().push();
+            return "E: " + error;
         }
     }
 
     adjustedCode.pop_back(); // Remove last ; character, added in the while
     value_ = adjustedCode;
+    Redis::get().push();
     return "";
 }
 
@@ -103,7 +147,7 @@ std::string Decoration::ToString() const
 
 Category::Category(std::string name)
 {
-    this->name_ = name;
+    name_ = name;
 }
 
 std::string Category::Change(std::string newOption)

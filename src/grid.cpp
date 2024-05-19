@@ -1,6 +1,7 @@
 #include "grid.h"
 #include "utils.h"
 #include "settings.h"
+#include "monitors.h"
 #include <cassert>
 #include <cstdlib> // for rand and srand
 #include <ctime>   // for time
@@ -88,6 +89,7 @@ void Grid::show(int xS, int yS, int xE, int yE) const
     yE = std::get<3>(xyMod);
 
     clearConsole();
+
     for (int row = 0; row < 10; row++)
     {
         for (int col = 0; col < 10; col++)
@@ -125,8 +127,7 @@ void Grid::fill(float emptiness = 0.2)
 {
     int remaining = 100 - (100 * emptiness);
 
-    // Initialize the random seed based on the current time
-    srand(time(nullptr));
+    srand(time(nullptr)); // Random seed based on the current time
     for (int row = 9; row >= 0; row--)
     {
         for (int col = 0; col < 10; col++)
@@ -154,26 +155,49 @@ optional<int> Grid::applyInput(char input, int xS, int yS, int xE, int yE)
     int zeros = 1;
 
     if (!v1.has_value() || !v2.has_value())
+    {
+        Redis::get() << "input " << input << " action empty-cells";
+        Redis::get().push();
         return optional<int>{};
+    }
 
     int diff = abs(v1.value() - v2.value());
+    std::string action;
 
     if (input == ADD)
+    {
+        action = "add";
         grid[yS][xS] = v1.value() + v2.value();
+    }
     else if (input == SUB)
+    {
+        action = "subtract";
         grid[yS][xS] = v1.value() - v2.value();
+    }
     else if (input == MUL)
+    {
+        action = "multiply";
         grid[yS][xS] = v1.value() * v2.value();
+    }
     else if (input == MOD)
+    {
+        action = "module";
         grid[yS][xS] = v1.value() % v2.value();
+    }
     else if (input == DIV)
     {
+        action = "divide";
         if (v2.value() == 0 || v1.value() % v2.value() != 0)
+        {
+            Redis::get() << "input " << input << " action illegal-divide";
+            Redis::get().push();
             return optional<int>{};
+        }
         grid[yS][xS] = v1.value() / v2.value();
     }
     else if (input == MRG)
     {
+        action = "merge";
         sign = (v1.value() < 0 || v2.value() < 0) ? -1 : 1;
         zeros = 10;
         while (zeros < abs(v2.value()))
@@ -181,8 +205,14 @@ optional<int> Grid::applyInput(char input, int xS, int yS, int xE, int yE)
         grid[yS][xS] = sign * (abs(v1.value()) * zeros + abs(v2.value()));
     }
     else
+    {
+        Redis::get() << "input " << input << " action unknown";
+        Redis::get().push();
         return optional<int>{};
+    }
 
+    Redis::get() << "input " << input << " action " << action;
+    Redis::get().push();
     grid[yE][xE] = optional<int>{};
     adjustHole(xE, yE);
 
