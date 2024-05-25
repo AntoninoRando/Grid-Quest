@@ -8,7 +8,7 @@
 
 int main()
 {
-    if (!Redis::get().connect("127.0.0.1", 6379))
+    if (!Redis::get().connect("localhost", 6379))
     {
         std::cout << "ERROR: Couldn't connect to the redis server.\n"
                   << "Make sure the Redis server is ready "
