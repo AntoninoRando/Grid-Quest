@@ -13,3 +13,11 @@ add_executable(stats
 
 target_include_directories(stats PRIVATE "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(stats PRIVATE hiredis)
+
+add_executable(times
+    loadTimes.cpp
+    ../monitors.cpp
+)
+
+target_include_directories(times PRIVATE "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(times PRIVATE hiredis)

@@ -26,7 +26,7 @@ void Context::show() const
 
     auto end = std::chrono::system_clock::now();
     auto showTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    Redis::get() << "time:state-show " << showTime << "ms";
+    Redis::get() << "time(ms):state-show " << showTime;
     Redis::get().push();
 }
 

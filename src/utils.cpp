@@ -60,7 +60,7 @@ void clearConsole(SHORT column, SHORT row)
 
     auto end = std::chrono::system_clock::now();
     auto clearTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    Redis::get() << "time:console-clear " << clearTime << "ms";
+    Redis::get() << "time(ms):console-clear " << clearTime;
     Redis::get().push();
 }
 
