@@ -7,34 +7,35 @@ object Profile {
     creation: date
 }
 
-object Quest {
-    quest_num: int
-    final_num: int 0..1
+object Session {
     start: timestamp
     end: timestamp
-    hp: int
+    max_wait: real
+    avg_wait: real
 }
 
-object Cell {
-    val: int
-    x: cell_cord
-    y: cell_cord
+object Quest {
+    goal: int
+    start: timestamp
+    end: timestamp
+    result: int 0..1
+    hp: int
+    grid: str
 }
 
 object Operation {
     type: operation
     ord: int > 0
+    primary_cell: cell
+    secondar_cell: cell
 }
 
 ' Relationship
 
-Profile "0..*" -- "1..1" Quest : plays
+Profile "0..*" -- "1..1" Session : plays
 
-Quest "0..1\nnext" -- "0..1\nprev" Quest : adventure
-Quest "2..100" -- "0..*" Cell : cell_grid
+Session "0..*" -- "1..1" Quest : has
 
-Operation "0..*" -- "0..*" Quest : op_quest
-Operation "1..1" -- "0..*" Cell : start
-Operation "1..1" -- "0..*" Cell : end
+Operation "0..*" -- "0..*" Quest : performs
 
 @enduml
