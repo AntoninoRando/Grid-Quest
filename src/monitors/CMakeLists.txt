@@ -5,3 +5,11 @@ add_executable(inputs
 
 target_include_directories(inputs PRIVATE "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(inputs PRIVATE hiredis)
+
+add_executable(stats
+    analyzeStats.cpp
+    ../monitors.cpp
+)
+
+target_include_directories(stats PRIVATE "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(stats PRIVATE hiredis)

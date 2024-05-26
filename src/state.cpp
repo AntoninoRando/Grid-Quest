@@ -26,7 +26,7 @@ void Context::show() const
 
     auto end = std::chrono::system_clock::now();
     auto showTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    Redis::get() << "show_time " << showTime << "ms";
+    Redis::get() << "time:state-show " << showTime << "ms";
     Redis::get().push();
 }
 
@@ -39,7 +39,7 @@ void Bye::setup()
 {
     clearConsole();
     std::cout << "Bye!";
-    Redis::get() << "game_end 1";
+    Redis::get() << "game-end 1";
     Redis::get().push();
     exit(0);
 }
@@ -78,7 +78,7 @@ Quest::Quest()
     grid.fill(0.8);
     srand(time(nullptr));
     quest = rand() % 100 + 1;
-    Redis::get() << "quest_start 1";
+    Redis::get() << "quest-start 1";
     Redis::get().push();
 }
 
@@ -126,7 +126,7 @@ void Quest::processInput(char input)
     }
     else if (input == ESC)
     {
-        Redis::get() << "input " << input << "action quest_quit";
+        Redis::get() << "input 27 action quest-quit";
         Redis::get().push();
         context_->transitionTo(new Menu);
         return;
@@ -150,7 +150,7 @@ void Quest::processInput(char input)
         {
             if (hp < 0)
             {
-                Redis::get() << "quest_lost 1 reason no-hp";
+                Redis::get() << "quest-lost no-hp";
                 Redis::get().push();
                 context_->transitionTo(new Defeat);
             }
@@ -158,13 +158,13 @@ void Quest::processInput(char input)
             // returned, and quest +1 != quest, it is in fact lost.
             else if (grid.getCell(0, 9).value_or(quest + 1) == quest)
             {
-                Redis::get() << "quest_won 1";
+                Redis::get() << "quest-won 1";
                 Redis::get().push();
                 context_->transitionTo(new Victory);
             }
             else
             {
-                Redis::get() << "quest_lost 1 reason no-match";
+                Redis::get() << "quest-lost no-match";
                 Redis::get().push();
                 context_->transitionTo(new Defeat);
             }
@@ -178,7 +178,7 @@ void Quest::processInput(char input)
 
 void Opening::show() const
 {
-    Redis::get() << "game_start 1";
+    Redis::get() << "game-start 1";
     Redis::get().push();
     std::cout << "GRID QUEST";
     context_->transitionTo(new Menu);
