@@ -12,6 +12,7 @@ CREATE DOMAIN s_str AS VARCHAR(20);
 CREATE DOMAIN m_str AS VARCHAR(100);
 CREATE DOMAIN grid AS VARCHAR(318) CHECK (VALUE ~ '^(\.{0,2}\d+)+$');
 CREATE TYPE cells_operation AS ENUM('Add', 'Sub', 'Mul', 'Div', 'Mod', 'Concat');
+CREATE TYPE scene_type AS ENUM('Menu', 'Settings', 'Victory', 'Defeat');
 CREATE TYPE cell AS (value INTEGER, x cell_cord, y cell_cord);
 -- ^       = start of the string;
 -- \.{0,2} = between 0 and 2 dots: "", ".", or "..";
@@ -32,19 +33,28 @@ CREATE TYPE cell AS (value INTEGER, x cell_cord, y cell_cord);
 -- Tables
 
 CREATE TABLE Profile(
-	nickame m_str PRIMARY KEY,
-	creation date NOT NULL
+	nickname m_str PRIMARY KEY,
+	creation DATE NOT NULL
 );
 
 CREATE TABLE Session(
-    player m_str,
+    id SERIAL PRIMARY KEY,
+    player m_str NOT NULL,
 	startstamp TIMESTAMP,
-    endstamp TIMESTAMP NOT NULL,
+    UNIQUE (player, startstamp),
+	FOREIGN KEY (player) REFERENCES Profile(nickname)
+);
+
+CREATE TABLE Scene(
+    player_session INTEGER,
+    ord INTEGER,
+    type_name scene_type NOT NULL,
+    time_in INTERVAL NOT NULL,
     max_wait REAL NOT NULL,
-	avg_wait REAL NOT NULL,
-    PRIMARY KEY (player, startstamp),
-	FOREIGN KEY (player) REFERENCES Profile(nickame),
-    CONSTRAINT start_before_end CHECK (startstamp < endstamp)
+    avg_wait REAL NOT NULL,
+    PRIMARY KEY (player_session, ord),
+	FOREIGN KEY (player_session) REFERENCES session(id),
+    CONSTRAINT non_negative_ord CHECK (ord >= 0)
 );
 
 CREATE TABLE Quest(

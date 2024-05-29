@@ -3,18 +3,25 @@
 ' Entities
 
 object Profile {
-    {static} nickname: str
+    <u>nickname: str</u>
     creation: date
 }
 
 object Session {
+    <u>id: int > 0</u>
     start: timestamp
-    end: timestamp
+}
+
+object Scene {
+    <u>ord: int > 0</u>
+    name: scene
+    time_in: interval
     max_wait: real
     avg_wait: real
 }
 
 object Quest {
+    <u>id: int > 0</u>
     goal: int
     start: timestamp
     end: timestamp
@@ -24,10 +31,10 @@ object Quest {
 }
 
 object Operation {
+    <u>ord: int > 0</u>
     type: operation
-    ord: int > 0
     primary_cell: cell
-    secondar_cell: cell
+    secondary_cell: cell
 }
 
 ' Relationship
@@ -36,6 +43,8 @@ Profile "0..*" -- "1..1" Session : plays
 
 Session "0..*" -- "1..1" Quest : has
 
-Operation "0..*" -- "0..*" Quest : performs
+Session "1..*" -- "<u>1..1</u>" Scene : takes
+
+Quest "0..*" -left- "<u>1..1</u>" Operation : performs
 
 @enduml
