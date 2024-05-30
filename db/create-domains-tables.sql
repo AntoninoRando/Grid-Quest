@@ -40,7 +40,7 @@ CREATE TABLE Profile(
 CREATE TABLE Session(
     id SERIAL PRIMARY KEY,
     player m_str NOT NULL,
-	startstamp TIMESTAMP,
+	startstamp TIMESTAMP NOT NULL,
     UNIQUE (player, startstamp),
 	FOREIGN KEY (player) REFERENCES Profile(nickname)
 );
@@ -62,7 +62,7 @@ CREATE TABLE Quest(
 	session_player m_str,
     session_startstamp TIMESTAMP,
     goal INTEGER NOT NULL,
-    startstamp TIMESTAMP,
+    startstamp TIMESTAMP NOT NULL,
     endstamp TIMESTAMP NOT NULL,
 	result INTEGER,
     hp INTEGER NOT NULL,
