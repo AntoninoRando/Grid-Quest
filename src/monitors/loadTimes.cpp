@@ -28,19 +28,17 @@ public:
 
     void execCommitQueries(pqxx::work transaction) override
     {
-        std::stringstream queryS;
-        queryS << "SELECT add_game_session('" << player << "', " << startTime << ")";
-        std::string query = queryS.str();
-        std::string sep(query.length(), '-');
-        std::cout << "SQL ------------------------" << sep << "\n"
-                  << ">>> Executing postgreSQL query: " << query << "\n";
+        query_ << "SELECT add_game_session('" 
+               << player << "', " 
+               << startTime << ")";
+        std::string query = prettyPrintQuery();
 
         try
         {
             pqxx::result res = transaction.exec(query);
             id = res[0][0].as<int>();
             std::cout << "Query executed successfully\n"
-                      << "\t(result) " << id << "\n";
+                      << "\t(result) Session ID: " << id << "\n";
         }
         catch (const pqxx::sql_error &e)
         {
@@ -81,18 +79,14 @@ public:
     }
     void execCommitQueries(pqxx::work transaction) override
     {
-        std::stringstream queryS;
-        queryS << "SELECT add_game_scene("
+        query_<< "SELECT add_game_scene("
                << session << ", "
                << ord << ", "
                << "'" << sceneName << "', "
                << (endTime - startTime) << ", "
                << maxWait << ", "
                << avgWait << ")";
-        std::string query = queryS.str();
-        std::string sep(query.length(), '-');
-        std::cout << "SQL ------------------------" << sep << "\n"
-                  << ">>> Executing postgreSQL query: " << query << "\n";
+        std::string query = prettyPrintQuery();
 
         try
         {

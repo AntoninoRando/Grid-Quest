@@ -1,4 +1,5 @@
 #include "monitors.h"
+#include <iostream>
 
 bool Redis::connect(const char *ip, int port)
 {
@@ -34,6 +35,16 @@ void *Redis::push()
     streamCommand_.str(""); // Clear the stream
     streamCommand_.clear(); // Clear any error flags
     return result;
+}
+
+std::string ParserState::prettyPrintQuery()
+{
+    std::string query = query_.str();
+    std::string sep(query.length(), '-');
+    std::cout << "SQL ------------------------" << sep << "\n"
+              << ">>> Executing postgreSQL query: " << query << "\n";
+    
+    return query;
 }
 
 void ParserContext::complete()

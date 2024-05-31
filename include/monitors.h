@@ -50,6 +50,7 @@ class ParserState
 {
 protected:
     ParserContext *context_;
+    std::stringstream query_;
 
 public:
     /// @brief Change the current context.
@@ -57,6 +58,7 @@ public:
     /// @brief DExecute the SQL query to commit the information parsed in this
     /// state.
     virtual void execCommitQueries(pqxx::work) = 0;
+    std::string prettyPrintQuery();
 };
 
 /// @brief The current game state.
