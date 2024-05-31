@@ -5,6 +5,8 @@ add_executable(inputs
 
 target_include_directories(inputs PRIVATE "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(inputs PRIVATE hiredis)
+target_link_libraries(inputs PRIVATE PostgreSQL::PostgreSQL)
+target_link_libraries(inputs PRIVATE pqxx)
 
 add_executable(stats
     analyzeStats.cpp
@@ -13,6 +15,8 @@ add_executable(stats
 
 target_include_directories(stats PRIVATE "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(stats PRIVATE hiredis)
+target_link_libraries(stats PRIVATE PostgreSQL::PostgreSQL)
+target_link_libraries(stats PRIVATE pqxx)
 
 add_executable(times
     loadTimes.cpp
@@ -21,3 +25,5 @@ add_executable(times
 
 target_include_directories(times PRIVATE "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(times PRIVATE hiredis)
+target_link_libraries(times PRIVATE PostgreSQL::PostgreSQL)
+target_link_libraries(times PRIVATE pqxx)

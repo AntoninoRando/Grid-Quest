@@ -30,8 +30,26 @@ void *Redis::putInStream(std::string command)
 
 void *Redis::push()
 {
-    void* result = putInStream(streamCommand_.str());
+    void *result = putInStream(streamCommand_.str());
     streamCommand_.str(""); // Clear the stream
     streamCommand_.clear(); // Clear any error flags
     return result;
+}
+
+void ParserContext::complete()
+{
+    if (lastStateCompleted)
+        return;
+
+    state_->execCommitQueries(pqxx::work(*connection));
+    lastStateCompleted = true;
+}
+
+void ParserContext::transitionTo(ParserState *state)
+{
+    if (!lastStateCompleted)
+        complete();
+    state_ = state;
+    state_->setContext(this);
+    lastStateCompleted = false;
 }

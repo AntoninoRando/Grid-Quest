@@ -3,7 +3,8 @@
 
 #include <hiredis.h>
 #include <string>
-#include <sstream> 
+#include <sstream>
+#include <pqxx/pqxx>
 
 #define STREAM_NAME "gridquest"
 
@@ -40,6 +41,39 @@ public:
         streamCommand_ << value;
         return get();
     }
+};
+
+class ParserContext;
+
+/// @brief A state of the game (e.g., Menu, Profile, New Game).
+class ParserState
+{
+protected:
+    ParserContext *context_;
+
+public:
+    /// @brief Change the current context.
+    void setContext(ParserContext *context) { context_ = context; }
+    /// @brief DExecute the SQL query to commit the information parsed in this
+    /// state.
+    virtual void execCommitQueries(pqxx::work) = 0;
+};
+
+/// @brief The current game state.
+class ParserContext
+{
+    ParserState *state_ = nullptr;
+    pqxx::connection *connection;
+    bool lastStateCompleted = true;
+
+public:
+    ParserContext(const char *db_url)
+    {
+        connection = new pqxx::connection(db_url);
+    }
+    ParserState *state() { return state_; }
+    void complete();
+    void transitionTo(ParserState *state);
 };
 
 #endif

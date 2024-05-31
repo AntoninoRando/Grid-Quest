@@ -26,7 +26,8 @@ void Context::show() const
 
     auto end = std::chrono::system_clock::now();
     auto showTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    Redis::get() << "time(ms):state-show " << showTime;
+    Redis::get() << "enter-state " << state_->getName() << " "
+                 << "time(ms):state-show " << showTime;
     Redis::get().push();
 }
 
@@ -41,7 +42,7 @@ void Bye::setup()
     std::cout << "Bye!";
     Redis::get() << "game-end 1";
     Redis::get().push();
-    exit(0);
+    exit(0); //@TODO: replace this with a more elegant solution
 }
 
 void Victory::show() const
@@ -73,6 +74,7 @@ bool Quest::isEnd()
 
 Quest::Quest()
 {
+    name_ = "Quest";
     user = Cursor();
     user.setType(CursorType());
     grid.fill(0.8);

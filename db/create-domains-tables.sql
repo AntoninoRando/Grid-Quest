@@ -12,7 +12,7 @@ CREATE DOMAIN s_str AS VARCHAR(20);
 CREATE DOMAIN m_str AS VARCHAR(100);
 CREATE DOMAIN grid AS VARCHAR(318) CHECK (VALUE ~ '^(\.{0,2}\d+)+$');
 CREATE TYPE cells_operation AS ENUM('Add', 'Sub', 'Mul', 'Div', 'Mod', 'Concat');
-CREATE TYPE scene_type AS ENUM('Menu', 'Settings', 'Victory', 'Defeat');
+CREATE TYPE scene_type AS ENUM('Menu', 'Settings', 'Quest', 'Victory', 'Defeat');
 CREATE TYPE cell AS (value INTEGER, x cell_cord, y cell_cord);
 -- ^       = start of the string;
 -- \.{0,2} = between 0 and 2 dots: "", ".", or "..";

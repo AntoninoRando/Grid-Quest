@@ -5,5 +5,13 @@ project(GridQuest)
 set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}")
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}")
 
-add_subdirectory(requirements/hiredis)
+# Disabling hiredis tests
+set(DISABLE_TESTS ON)
+
+# Disabling libpqxx tests
+set(SKIP_BUILD_TEST ON)
+set(INSTALL_TEST OFF)
+
 add_subdirectory(src)
+add_subdirectory(requirements/hiredis)
+add_subdirectory(requirements/libpqxx)

@@ -15,8 +15,11 @@ class State
 {
 protected:
     Context *context_;
+    /// @brief The name of the state. It shouldn't contain spaces.
+    std::string name_;
 
 public:
+    std::string getName() { return name_; }
     /// @brief Change the current context.
     void setContext(Context *context)
     {
@@ -44,6 +47,10 @@ public:
 class Bye : public State
 {
 public:
+    Bye()
+    {
+        name_ = "Bye";
+    }
     void setup() override;
 };
 
@@ -51,6 +58,10 @@ public:
 class Victory : public State
 {
 public:
+    Victory()
+    {
+        name_ = "Victory";
+    }
     void show() const override;
     void processInput(char) override;
 };
@@ -59,6 +70,10 @@ public:
 class Defeat : public State
 {
 public:
+    Defeat()
+    {
+        name_ = "Defeat";
+    }
     void show() const override;
     void processInput(char) override;
 };
@@ -91,6 +106,10 @@ class Menu : public State
     void resetOption(int option);
 
 public:
+    Menu()
+    {
+        name_ = "Menu";
+    }
     void setup() override;
     void show() const override;
     void processInput(char input) override;
@@ -114,9 +133,13 @@ class Settings : public State
     std::string error = "";
 
     void highlightSection(int option) const;
-    void highlightSetting(int ord, Setting* setting) const;
+    void highlightSetting(int ord, Setting *setting) const;
 
 public:
+    Settings()
+    {
+        name_ = "Settings";
+    }
     void setup() override;
     void show() const override;
     void processInput(char input) override;
@@ -126,6 +149,10 @@ public:
 class Opening : public State
 {
 public:
+    Opening()
+    {
+        name_ = "Opening";
+    }
     void show() const override;
 };
 
