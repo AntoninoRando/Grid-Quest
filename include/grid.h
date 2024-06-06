@@ -23,7 +23,7 @@ class Grid
 
 public:
     void show(int, int, int, int) const;
-    void fill(float);
+    void fill(int amount = 100);
     /// @brief Reduce the grid if the input correspond to an operation between
     /// valid cells.
     /// @return An optional describing the difference between the cells' values,

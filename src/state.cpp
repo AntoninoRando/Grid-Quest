@@ -77,7 +77,9 @@ Quest::Quest()
     name_ = "Quest";
     user = Cursor();
     user.setType(CursorType());
-    grid.fill(0.8);
+
+    int fillAmount = 18 + (rand() % 8); // i.e., from 18 to 25
+    grid.fill(fillAmount);
     srand(time(nullptr));
     quest = rand() % 100 + 1;
     Redis::get() << "quest-start 1";

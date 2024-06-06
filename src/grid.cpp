@@ -123,21 +123,19 @@ void Grid::show(int xS, int yS, int xE, int yE) const
     }
 }
 
-void Grid::fill(float emptiness = 0.2)
+void Grid::fill(int amount)
 {
-    int remaining = 100 - (100 * emptiness);
-
     srand(time(nullptr)); // Random seed based on the current time
-    for (int row = 9; row >= 0; row--)
-    {
-        for (int col = 0; col < 10; col++)
-        {
-            grid[row][col] = optional<int>{rand() % 9};
-            remaining -= 1;
 
-            if (remaining == 0)
-                return;
-        }
+    int row = 9;
+    int col = 0;
+    while (amount > 0 && row >= 0)
+    {
+        grid[row][col] = optional<int>{rand() % 9};
+        amount -= 1;
+
+        col = (col + 1) % 10;
+        row = (col == 0) ? row - 1 : row;
     }
 }
 
