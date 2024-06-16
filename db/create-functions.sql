@@ -73,7 +73,7 @@ DECLARE
 	start_stamp TIMESTAMP;
 	session_id INT;
 BEGIN
-	SELECT TO_TIMESTAMP(start_epoch / 1000) INTO start_stamp;
+	SELECT TO_TIMESTAMP(start_epoch / 1000)  INTO start_stamp;
 	SELECT add_game_session(pl, start_stamp) INTO session_id;
 	RETURN session_id;
 END;
@@ -82,12 +82,12 @@ $$;
 COMMIT;
 
 CREATE FUNCTION add_game_scene(
-    session_id INT, 
+    session_id  INT, 
     scene_order INT,
-	stype scene_type,
-	duration BIGINT,
-	mw REAL,
-	aw REAL
+	stype       scene_type,
+	duration    BIGINT,
+	mw          REAL,
+	aw          REAL
 )
     RETURNS BOOL
     LANGUAGE plpgsql
@@ -99,8 +99,8 @@ BEGIN
     SELECT EXISTS(
         SELECT * 
         FROM Scene 
-        WHERE player_session = session_id 
-              AND ord = scene_order) INTO already_exists;
+        WHERE player_session = session_id AND ord = scene_order)
+    INTO already_exists;
     
     IF already_exists THEN
         RAISE INFO 

@@ -7,13 +7,13 @@ CREATE SCHEMA public;
 
 -- Domains
 
-CREATE DOMAIN cell_cord AS INTEGER CHECK (VALUE >= 0 AND VALUE <= 9);
-CREATE DOMAIN s_str AS VARCHAR(20);
-CREATE DOMAIN m_str AS VARCHAR(100);
-CREATE DOMAIN grid AS VARCHAR(318) CHECK (VALUE ~ '^(\.{0,2}\d+)+$');
-CREATE TYPE cells_operation AS ENUM('Add', 'Sub', 'Mul', 'Div', 'Mod', 'Concat');
-CREATE TYPE scene_type AS ENUM('Menu', 'Settings', 'Quest', 'Victory', 'Defeat');
-CREATE TYPE cell AS (value INTEGER, x cell_cord, y cell_cord);
+CREATE DOMAIN cell_cord       AS INTEGER CHECK (VALUE >= 0 AND VALUE <= 9);
+CREATE DOMAIN s_str           AS VARCHAR(20);
+CREATE DOMAIN m_str           AS VARCHAR(100);
+CREATE TYPE   cells_operation AS ENUM('Add', 'Sub', 'Mul', 'Div', 'Mod', 'Concat');
+CREATE TYPE   scene_type      AS ENUM('Menu', 'Settings', 'Quest', 'Victory', 'Defeat');
+CREATE TYPE   cell            AS (value INTEGER, x cell_cord, y cell_cord);
+CREATE DOMAIN grid            AS VARCHAR(318) CHECK (VALUE ~ '^(\.{0,2}\d+)+$');
 -- ^       = start of the string;
 -- \.{0,2} = between 0 and 2 dots: "", ".", or "..";
 -- \d+     = any number of digits;
@@ -32,53 +32,62 @@ CREATE TYPE cell AS (value INTEGER, x cell_cord, y cell_cord);
 
 -- Tables
 
-CREATE TABLE Profile(
+CREATE TABLE Profile (
 	nickname m_str PRIMARY KEY,
-	creation DATE NOT NULL
+
+	creation DATE  NOT NULL
 );
 
-CREATE TABLE Session(
-    id SERIAL PRIMARY KEY,
-    player m_str NOT NULL,
+CREATE TABLE Session (
+    id         SERIAL    PRIMARY KEY,
+    
+    player     m_str     NOT NULL,
 	startstamp TIMESTAMP NOT NULL,
+
     UNIQUE (player, startstamp),
 	FOREIGN KEY (player) REFERENCES Profile(nickname)
 );
 
-CREATE TABLE Scene(
+CREATE TABLE Scene (
     player_session INTEGER,
-    ord INTEGER,
-    type_name scene_type NOT NULL,
-    time_in INTERVAL NOT NULL,
-    max_wait REAL NOT NULL,
-    avg_wait REAL NOT NULL,
+    ord            INTEGER,
     PRIMARY KEY (player_session, ord),
+
+    type_name      scene_type NOT NULL,
+    time_in        INTERVAL   NOT NULL,
+    max_wait       REAL       NOT NULL,
+    avg_wait       REAL       NOT NULL,
+
 	FOREIGN KEY (player_session) REFERENCES session(id),
     CONSTRAINT non_negative_ord CHECK (ord >= 0)
 );
 
-CREATE TABLE Quest(
-    id SERIAL PRIMARY KEY,
-	session_player m_str,
+CREATE TABLE Quest (
+    id                 SERIAL    PRIMARY KEY,
+
+	session_player     m_str,
     session_startstamp TIMESTAMP,
-    goal INTEGER NOT NULL,
-    startstamp TIMESTAMP NOT NULL,
-    endstamp TIMESTAMP NOT NULL,
-	result INTEGER,
-    hp INTEGER NOT NULL,
-    grid grid NOT NULL,
+	result             INTEGER,
+    goal               INTEGER   NOT NULL,
+    startstamp         TIMESTAMP NOT NULL,
+    endstamp           TIMESTAMP NOT NULL,
+    hp                 INTEGER   NOT NULL,
+    grid               grid      NOT NULL,
+
     FOREIGN KEY (session_player, session_startstamp) REFERENCES Session(player, startstamp),
     UNIQUE (session_player, session_startstamp, startstamp),
     CONSTRAINT start_before_end CHECK (startstamp < endstamp)
 );
 
-CREATE TABLE Operation(
-    quest INTEGER,
-    ord INTEGER,
-	op_type cells_operation NOT NULL, 
-	primary_cell cell NOT NULL,
-    secondary_cell cell NOT NULL,
+CREATE TABLE Operation (
+    quest          INTEGER,
+    ord            INTEGER,
     PRIMARY KEY (quest, ord),
+
+	op_type        cells_operation NOT NULL, 
+	primary_cell   cell            NOT NULL,
+    secondary_cell cell            NOT NULL,
+
     FOREIGN KEY (quest) REFERENCES Quest(id),
     CONSTRAINT non_negative_ord CHECK (ord >= 0)
 );
