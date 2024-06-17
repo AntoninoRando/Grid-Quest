@@ -3,9 +3,10 @@
 #define CURSOR_H_
 
 #include <tuple>
-
-/// @brief All possible cursor direction (right, bottom, left and top). They are
-/// defined in clockwise order.
+/**
+ * @brief The cursor direction (right, bottom, left and top). They are defined
+ * in clockwise order.
+ */
 enum CursorDirection
 {
     RGT,
@@ -14,64 +15,78 @@ enum CursorDirection
     TOP,
 };
 
+/**
+ * @brief The type of the user cursor. It defines how the cursor behaves.
+ *
+ * This is NOT the actual cursor that the user moves on the grid. This has to
+ * be attached to the actual cursor, which works as a wrapper. The actual
+ * cursor will assume the behavior specified by this class.
+ */
 class CursorType
 {
 protected:
     CursorDirection direction = CursorDirection::RGT;
 
 public:
-    virtual std::tuple<int, int> cursorEnd(int xS, int yS)
-    {
-        switch (direction)
-        {
-        case CursorDirection::RGT:
-            return std::make_tuple(xS + 1, yS);
-        case CursorDirection::LFT:
-            return std::make_tuple(xS - 1, yS);
-        case CursorDirection::TOP:
-            return std::make_tuple(xS, yS - 1);
-        case CursorDirection::BOT:
-            return std::make_tuple(xS, yS + 1);
-        default:
-            break;
-        }
-
-        return std::make_tuple(xS + 1, yS);
-    }
+    virtual std::tuple<int, int> cursorEnd(int xS, int yS);
     void rotateLeft();
     void rotateRight();
 };
 
-/// @brief The user cursor on the Grid. By default, it spawn at the
-/// bottom-left corner of the Grid.
+/**
+ * @brief The user cursor on the Grid. By default, it spawn at the bottom-left
+ * corner of the Grid and takes two cells.
+ */
 class Cursor
 {
     int xS_ = 0;
     int yS_ = 9;
     int xE_ = 1;
     int yE_ = 9;
-    CursorType cursorType;
+    CursorType cursorType_;
 
 public:
+    /**
+     * @brief The x coordinate on the grid of where the cursor starts.
+     */
     int xS() const { return xS_; }
+    /**
+     * @brief The y coordinate on the grid of where the cursor starts.
+     */
     int yS() const { return yS_; }
+    /**
+     * @brief The x coordinate on the grid of where the cursor ends.
+     */
     int xE() const { return xE_; }
+    /**
+     * @brief The y coordinate on the grid of where the cursor ends.
+     */
     int yE() const { return yE_; }
-    void setType(CursorType t) { cursorType = t; }
 
-    /// @brief Add (xAdd, yAdd) to the cursor start coordinate, then adjust where
-    /// the cursor ends.
-    void updateCursor(int, int);
-    void rotateLeft()
-    {
-        cursorType.rotateLeft();
-        updateCursor(0, 0);
-    }
-    void rotateRight()
-    {
-        cursorType.rotateRight();
-        updateCursor(0, 0);
-    }
+    /**
+     * @brief Changes the cursor type (i.e., its behavior).
+     * 
+     * @param t The new cursor type.
+     */
+    void setType(CursorType t) { cursorType_ = t; }
+
+    /**
+     * @brief Shift the cursor.
+     *
+     * @param xAdd Amount to add to the x coordinate of the cursor start.
+     * @param yAdd Amount to add to the y coordinate of the cursor end.
+     */
+    void updateCursor(int xAdd, int yAdd);
+
+    /**
+     * @brief Rotate the cursor counterclockwise.
+     */
+    void rotateLeft();
+
+    /**
+     * @brief Rotate the cursro clockwise.
+     */
+    void rotateRight();
 };
 
 #endif

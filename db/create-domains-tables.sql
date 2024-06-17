@@ -1,11 +1,11 @@
 BEGIN TRANSACTION;
 
--- Remove previous tables and domains
+-- REMOVE PREVIOUS TABLES AND DOMAINS
 
 DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
 
--- Domains
+-- DOMAINS
 
 CREATE DOMAIN cell_cord       AS INTEGER CHECK (VALUE >= 0 AND VALUE <= 9);
 CREATE DOMAIN s_str           AS VARCHAR(20);
@@ -30,41 +30,56 @@ CREATE DOMAIN grid            AS VARCHAR(318) CHECK (VALUE ~ '^(\.{0,2}\d+)+$');
 -- higher value than 99. (Remember that a grid is a 10x10.)
 
 
--- Tables
+-- TABLES
 
+-- A user profile in which they saves their progress.
 CREATE TABLE Profile (
+    -- PRIMARY KEY attributes
 	nickname m_str PRIMARY KEY,
 
+    -- Other attributes
 	creation DATE  NOT NULL
 );
 
+-- A gaming session of a player (i.e., from when they opened the game to when
+-- they closed it).
 CREATE TABLE Session (
+    -- PRIMARY KEY attributes
     id         SERIAL    PRIMARY KEY,
     
+    -- Other attributes
     player     m_str     NOT NULL,
 	startstamp TIMESTAMP NOT NULL,
 
+    -- CONSTRAINTS
     UNIQUE (player, startstamp),
 	FOREIGN KEY (player) REFERENCES Profile(nickname)
 );
 
+-- A game scene and its wait times to load.
 CREATE TABLE Scene (
+    -- PRIMARY KEY attributes
     player_session INTEGER,
     ord            INTEGER,
     PRIMARY KEY (player_session, ord),
 
+    -- Other attributes
     type_name      scene_type NOT NULL,
     time_in        INTERVAL   NOT NULL,
     max_wait       REAL       NOT NULL,
     avg_wait       REAL       NOT NULL,
 
+    -- CONSTRAINTS
 	FOREIGN KEY (player_session) REFERENCES session(id),
     CONSTRAINT non_negative_ord CHECK (ord >= 0)
 );
 
+-- A single quest played by the user.
 CREATE TABLE Quest (
+    -- PRIMARY KEY attributes
     id                 SERIAL    PRIMARY KEY,
 
+    -- Other attributes
 	session_player     m_str,
     session_startstamp TIMESTAMP,
 	result             INTEGER,
@@ -74,20 +89,25 @@ CREATE TABLE Quest (
     hp                 INTEGER   NOT NULL,
     grid               grid      NOT NULL,
 
+    -- CONSTRAINTS
     FOREIGN KEY (session_player, session_startstamp) REFERENCES Session(player, startstamp),
     UNIQUE (session_player, session_startstamp, startstamp),
     CONSTRAINT start_before_end CHECK (startstamp < endstamp)
 );
 
+-- An operation on two cells of a grid.
 CREATE TABLE Operation (
+    -- PRIMARY KEY attributes
     quest          INTEGER,
     ord            INTEGER,
     PRIMARY KEY (quest, ord),
 
+    -- Other attributes
 	op_type        cells_operation NOT NULL, 
 	primary_cell   cell            NOT NULL,
     secondary_cell cell            NOT NULL,
 
+    -- CONSTRAINTS
     FOREIGN KEY (quest) REFERENCES Quest(id),
     CONSTRAINT non_negative_ord CHECK (ord >= 0)
 );

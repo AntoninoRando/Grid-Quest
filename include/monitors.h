@@ -9,6 +9,10 @@
 #define STREAM_NAME "gridquest"
 
 // Singleton: https://stackoverflow.com/questions/1008019/how-do-you-implement-the-singleton-design-pattern?answertab=scoredesc#tab-top
+
+/**
+ * @brief A singleton class representing the connection with the Redis server.
+ */
 class Redis
 {
     Redis() = default;  // Private constructor to prevent instantiation
@@ -45,7 +49,9 @@ public:
 
 class ParserContext;
 
-/// @brief A state of the game (e.g., Menu, Profile, New Game).
+/**
+ * @brief A state of the game (e.g., Menu, Profile, New Game).
+ */
 class ParserState
 {
 protected:
@@ -53,15 +59,21 @@ protected:
     std::stringstream query_;
 
 public:
-    /// @brief Change the current context.
+    /**
+     * @brief Change the current context.
+     */
     void setContext(ParserContext *context) { context_ = context; }
-    /// @brief DExecute the SQL query to commit the information parsed in this
-    /// state.
+    /**
+     * @brief DExecute the SQL query to commit the information parsed in this
+     * state.
+     */
     virtual void execCommitQueries(pqxx::work) = 0;
     std::string prettyPrintQuery();
 };
 
-/// @brief The current game state.
+/**
+ * @brief The current game state.
+ */
 class ParserContext
 {
     ParserState *state_ = nullptr;

@@ -45,7 +45,7 @@ std::string KeyBind::Change(std::string key)
         if (c == this)
             continue;
         ///@todo ADD CHECK THAT c IS A KEYBINDING
-        if (c->getValue() == key)
+        if (c->GetValue() == key)
         {
             std::string error("Key-already-in-use");
             // error.append(c->getName());
@@ -273,29 +273,29 @@ void GlobalSettings::load()
 
 char GlobalSettings::getKey(std::string keyName)
 {
-    Setting *movements = GlobalSettings::controls->getChildren()["Movement"];
-    Setting *operations = GlobalSettings::controls->getChildren()["Operations"];
+    Setting *movements = GlobalSettings::controls->GetChildren()["Movement"];
+    Setting *operations = GlobalSettings::controls->GetChildren()["Operations"];
 
-    Setting *key = movements->getChildren()[keyName];
+    Setting *key = movements->GetChildren()[keyName];
     if (!key)
-        key = operations->getChildren()[keyName];
+        key = operations->GetChildren()[keyName];
     if (!key)
     {
         std::string error = "Received a non-existing key name: " + keyName;
         throw std::invalid_argument(error);
     }
-    return key->getValue()[0];
+    return key->GetValue()[0];
 }
 
 std::string GlobalSettings::getDecoration(std::string decName)
 {
-    Setting *decoration = GlobalSettings::graphic->getChildren()[decName];
+    Setting *decoration = GlobalSettings::graphic->GetChildren()[decName];
     if (!decoration)
     {
         std::string error = "Received a non-existing decoration name: " + decName;
         throw std::invalid_argument(error);
     }
-    return decoration->getValue();
+    return decoration->GetValue();
 }
 
 std::string &ltrim(std::string &str, std::string const &whitespace)

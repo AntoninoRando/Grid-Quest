@@ -65,8 +65,8 @@ void Settings::setup()
     for (size_t i = 0; i < numberOfSections; i++)
     {
         sectionsCursorOffset[i] = offset;
-        std::cout << sections[i]->getName() << std::string(8, ' ');
-        offset += sections[i]->getName().size() + 8;
+        std::cout << sections[i]->GetName() << std::string(8, ' ');
+        offset += sections[i]->GetName().size() + 8;
     }
 
     std::cout << '\n';
@@ -83,7 +83,7 @@ void Settings::show() const
 
     std::cout << "\u001b[" + BG_COL + (!selected ? ";2" : "") + "m";
     for (auto c : settings[currentSection])
-        std::cout << c->getName() << ": " << c->getValue() << "\n";
+        std::cout << c->GetName() << ": " << c->GetValue() << "\n";
     std::cout << "\u001b[0m\u001b[" + BG_COL + "m";
 
     if (selectedSetting.has_value())
@@ -94,7 +94,7 @@ void Settings::processInput(char input)
 {
     // Reset current section highlight
     setCursorPosition(sectionsCursorOffset[currentSection], 1);
-    std::cout << sections[currentSection]->getName();
+    std::cout << sections[currentSection]->GetName();
 
     if (selected)
     {
@@ -116,7 +116,7 @@ void Settings::processInput(char input)
         else if (input == ENTER)
         {
             Setting *setting = *selectedSetting.value();
-            int offset = (setting->getName() + ": " + setting->getValue()).size();
+            int offset = (setting->GetName() + ": " + setting->GetValue()).size();
             setCursorPosition(offset + 1, currentSetting + 3);
             std::cout << ">> ";
             setCursorPosition(offset + 4, currentSetting + 3);
@@ -150,13 +150,13 @@ void Settings::highlightSection(int section) const
 
     setCursorPosition(sectionsCursorOffset[section], 1);
     std::cout << "\u001b[" + SEL_COL + "m"
-              << sections[section]->getName()
+              << sections[section]->GetName()
               << "\u001b[0m\u001b[" + BG_COL + "m";
 }
 void Settings::highlightSetting(int ord, Setting *setting) const
 {
     setCursorPosition(0, ord + 3);
     std::cout << "\u001b[" + SEL_COL + "m";
-    std::cout << setting->getName() + ": " + setting->getValue();
+    std::cout << setting->GetName() + ": " + setting->GetValue();
     std::cout << "\u001b[0m\u001b[" + BG_COL + "m";
 }
