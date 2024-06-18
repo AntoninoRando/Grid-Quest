@@ -60,7 +60,7 @@ public:
     std::optional<int> applyInput(char, int, int, int, int);
 
     /**
-     * @brief Counts how many non-empty cells are remained in the grid.
+     * @brief Counts how many non-empty cells are left in the grid.
      * 
      * @return The number of non-empty cells of the grid.
      */

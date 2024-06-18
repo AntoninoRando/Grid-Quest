@@ -84,6 +84,13 @@
 #define ENTER '\r'
 #define ESC 27
 
+enum SettingType
+{
+    KEYBIND,
+    DECORATION,
+    CATEGORY
+};
+
 /**
  * @brief The abstract class representing any kind of setting, even a group of
  * settings.
@@ -103,7 +110,9 @@ public:
     void SetParent(Setting *parent) { parent_ = parent; }
     Setting *GetParent() const { return parent_; }
     std::string GetName() const { return name_; }
-    std::string GetValue() const { return this->value_; }
+    std::string name() const { return name_; }
+    std::string GetValue() const { return value_; }
+    std::string value() const { return value_; }
     virtual std::map<std::string, Setting *> GetChildren()
     {
         return std::map<std::string, Setting *>();
@@ -114,7 +123,7 @@ public:
      *
      * @param Setting The setting to add as a child.
      */
-    virtual void Add(Setting *Setting) {}
+    virtual void add(Setting *Setting) {}
 
     /**
      * @brief Try to remove a setting from this setting's childrens. If the
@@ -123,7 +132,7 @@ public:
      *
      * @param Setting The child setting to remove.
      */
-    virtual void Remove(Setting *Setting) {}
+    virtual void remove(Setting *Setting) {}
 
     /**
      * @brief Get all this setting children as a single list. If the setting is
@@ -140,12 +149,11 @@ public:
     }
 
     /**
-     * @brief Whether this setting groups other settings or not.
+     * @brief Get the type of this setting as a SettingType value.
      *
-     * @return true if this setting is a group for other settings.
-     * @return false if this setting is a specific game setting to configure.
+     * @return SettingType The type of this setting.
      */
-    virtual bool IsCategory() const { return false; }
+    virtual SettingType type() const = 0;
 
     /**
      * @brief Search a setting called `settingName` in this setting's childrens
@@ -155,10 +163,20 @@ public:
      * @return std::optional<Setting *> An optional with the setting, it it was
      * found; an empty optional otherwise.
      */
-    virtual std::optional<Setting *> findSetting(std::string settingName)
+    virtual std::optional<Setting *>
+    findSetting(std::string settingName)
     {
         return std::optional<Setting *>{};
     }
+
+    /**
+     * @brief Check if `newValue` is a valid new value for this setting.
+     *
+     * @param newValue The new value to validate.
+     * @return std::string An error message if the new value is invalid, an
+     * empty string otherwise.
+     */
+    virtual std::string validate(std::string newValue) { return ""; }
 
     /**
      * @brief Change the current setting (e.g., the key for a KeyBind).
@@ -213,19 +231,19 @@ public:
         return childrenList;
     }
 
-    void Add(Setting *component) override
+    void add(Setting *component) override
     {
         children_[component->GetName()] = component;
         component->SetParent(this);
     }
 
-    void Remove(Setting *component) override
+    void remove(Setting *component) override
     {
         children_.erase(component->GetName());
         component->SetParent(nullptr);
     }
 
-    bool IsCategory() const override { return true; }
+    SettingType type() const override { return CATEGORY; }
 
     std::string Change(std::string newOption) override;
     std::string ChangeWithInput() override;
@@ -240,9 +258,11 @@ class KeyBind : public Setting
 {
 public:
     KeyBind(std::string name, char key);
+    std::string validate(std::string) override;
     std::string Change(std::string) override;
     std::string ChangeWithInput() override;
     std::string ToString() const override;
+    SettingType type() const override { return KEYBIND; }
 };
 
 /**
@@ -252,9 +272,11 @@ class Decoration : public Setting
 {
 public:
     Decoration(std::string name, std::string code);
+    std::string validate(std::string) override;
     std::string Change(std::string) override;
     std::string ChangeWithInput() override;
     std::string ToString() const override;
+    SettingType type() const override { return DECORATION; }
 };
 
 Category *DefaultControls();
@@ -273,7 +295,7 @@ public:
      * @brief The category that groups input mapping settings.
      */
     static Category *controls;
-    
+
     /**
      * @brief The category that groups decoration settings.
      */

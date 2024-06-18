@@ -20,6 +20,7 @@ include(GoogleTest)
 add_executable(tests
   main.cpp
   grid_tests.cpp
+  settings_tests.cpp
   ../src/grid.cpp
   ../src/cursor.cpp
   ../src/grid.cpp

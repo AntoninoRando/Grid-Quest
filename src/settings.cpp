@@ -13,6 +13,30 @@ KeyBind::KeyBind(std::string name, char key)
     value_ = key;
 }
 
+std::string KeyBind::validate(std::string newValue)
+{
+    if (newValue.size() != 1)
+        return "New-value-is-not-a-character";
+
+    Setting *topParent = parent_;
+
+    if (topParent == nullptr)
+        return "";
+
+    while (topParent->GetParent() != nullptr)
+        topParent = topParent->GetParent();
+
+    for (auto c : topParent->GetChildrenList())
+    {
+        if (c == this || c->type() != KEYBIND)
+            continue;
+        if (c->GetValue() == newValue)
+            return "Key-already-in-use";
+    }
+
+    return "";
+}
+
 std::string KeyBind::Change(std::string key)
 {
     std::string nameNoSpace = std::regex_replace(name_, std::regex(" "), "-");
@@ -20,39 +44,12 @@ std::string KeyBind::Change(std::string key)
     Redis::get() << "key-bind-change " << nameNoSpace << " "
                  << "new-value " << keyNoSpace << " ";
 
-    if (key.size() != 1)
+    std::string error = validate(key);
+    if (error.length() > 0)
     {
-        std::string error("New-value-is-not-a-character");
         Redis::get() << "error " << error;
         Redis::get().push();
         return "E: " + error;
-    }
-
-    Setting *topParent = parent_;
-
-    if (topParent == nullptr)
-    {
-        value_ = key[0];
-        Redis::get().push();
-        return "";
-    }
-
-    while (topParent->GetParent() != nullptr)
-        topParent = topParent->GetParent();
-
-    for (auto c : topParent->GetChildrenList())
-    {
-        if (c == this)
-            continue;
-        ///@todo ADD CHECK THAT c IS A KEYBINDING
-        if (c->GetValue() == key)
-        {
-            std::string error("Key-already-in-use");
-            // error.append(c->getName());
-            Redis::get() << "error " << error;
-            Redis::get().push();
-            return "E: ";
-        }
     }
 
     value_ = key[0];
@@ -77,21 +74,10 @@ Decoration::Decoration(std::string name, std::string code)
     value_ = code;
 }
 
-std::string Decoration::Change(std::string newValue)
+std::string Decoration::validate(std::string newValue)
 {
-    std::string nameNoSpace = std::regex_replace(name_, std::regex(" "), "-");
-    std::string valueNoSpace = std::regex_replace(newValue, std::regex(" "), "-");
-
-    Redis::get() << "decoration-change " << nameNoSpace << " "
-                 << "new-value " << valueNoSpace << " ";
-
     if (newValue.size() < 1)
-    {
-        std::string error("Empty-value");
-        Redis::get() << "error " << error;
-        Redis::get().push();
-        return "E: " + error;
-    }
+        return "Empty-value";
 
     std::stringstream ss(newValue);
     std::string token;
@@ -100,35 +86,46 @@ std::string Decoration::Change(std::string newValue)
     while (getline(ss, token, ';'))
     {
         if (token.size() == 0)
-        {
-            std::string error("Two-semicolons-attached");
-            Redis::get() << "error " << error;
-            Redis::get().push();
-            return "E: " + error;
-        }
+            return "Two-semicolons-attached";
+
         try
         {
             int code = std::stoi(token);
             if (code < 0 || code > 255)
-            {
-                std::string error("Invalid-code-in-the-sequence");
-                Redis::get() << "error " << error;
-                Redis::get().push();
-                return "E: " + error;
-            }
+                return "Invalid-code-in-the-sequence";
             adjustedCode += std::to_string(code) + ";";
         }
         catch (const std::invalid_argument &_)
         {
-            std::string error("Non-digit-characters");
-            Redis::get() << "error " << error;
-            Redis::get().push();
-            return "E: " + error;
+            return "Non-digit-characters";
+        }
+        catch (const std::out_of_range &_)
+        {
+            return "Invalid-code-in-the-sequence";
         }
     }
 
     adjustedCode.pop_back(); // Remove last ; character, added in the while
-    value_ = adjustedCode;
+    return "";
+}
+
+std::string Decoration::Change(std::string newValue)
+{
+    std::string nameNoSpace = std::regex_replace(name_, std::regex(" "), "-");
+    std::string valueNoSpace = std::regex_replace(newValue, std::regex(" "), "-");
+
+    Redis::get() << "decoration-change " << nameNoSpace << " "
+                 << "new-value " << valueNoSpace << " ";
+
+    std::string error = validate(newValue);
+    if (error.length() > 0)
+    {
+        Redis::get() << "error " << error;
+        Redis::get().push();
+        return "E: " + error;
+    }
+
+    value_ = newValue;
     Redis::get().push();
     return "";
 }
@@ -195,7 +192,7 @@ std::optional<Setting *> Category::findSetting(std::string settingName)
 
     for (auto &[_, c] : children_)
     {
-        if (c->IsCategory())
+        if (c->type() == CATEGORY)
         {
             std::optional<Setting *> result = c->findSetting(settingName);
             if (result.has_value())
@@ -210,32 +207,32 @@ Category *DefaultControls()
     Category *controls = new Category("Controls");
     Category *movement = new Category("Movement");
     Category *operations = new Category("Operations");
-    controls->Add(movement);
-    controls->Add(operations);
-    movement->Add(new KeyBind("Move up", 'w'));
-    movement->Add(new KeyBind("Move left", 'a'));
-    movement->Add(new KeyBind("Move down", 's'));
-    movement->Add(new KeyBind("Move right", 'd'));
-    movement->Add(new KeyBind("Rotate left", 'q'));
-    movement->Add(new KeyBind("Rotate right", 'e'));
-    operations->Add(new KeyBind("Add", '+'));
-    operations->Add(new KeyBind("Subtract", '-'));
-    operations->Add(new KeyBind("Multiply", '*'));
-    operations->Add(new KeyBind("Divide", '/'));
-    operations->Add(new KeyBind("Module", '%'));
-    operations->Add(new KeyBind("Concat", '|'));
+    controls->add(movement);
+    controls->add(operations);
+    movement->add(new KeyBind("Move up", 'w'));
+    movement->add(new KeyBind("Move left", 'a'));
+    movement->add(new KeyBind("Move down", 's'));
+    movement->add(new KeyBind("Move right", 'd'));
+    movement->add(new KeyBind("Rotate left", 'q'));
+    movement->add(new KeyBind("Rotate right", 'e'));
+    operations->add(new KeyBind("Add", '+'));
+    operations->add(new KeyBind("Subtract", '-'));
+    operations->add(new KeyBind("Multiply", '*'));
+    operations->add(new KeyBind("Divide", '/'));
+    operations->add(new KeyBind("Module", '%'));
+    operations->add(new KeyBind("Concat", '|'));
     return controls;
 }
 
 Category *DefaultGraphic()
 {
     Category *graphic = new Category("Graphic");
-    graphic->Add(new Decoration("Selection", "7"));
-    graphic->Add(new Decoration("Background", "0"));
-    graphic->Add(new Decoration("Primary cell", "4;41;1"));
-    graphic->Add(new Decoration("Secondary cell", "31;1"));
-    graphic->Add(new Decoration("Even cells", "7"));
-    graphic->Add(new Decoration("Odd cells", "0"));
+    graphic->add(new Decoration("Selection", "7"));
+    graphic->add(new Decoration("Background", "0"));
+    graphic->add(new Decoration("Primary cell", "4;41;1"));
+    graphic->add(new Decoration("Secondary cell", "31;1"));
+    graphic->add(new Decoration("Even cells", "7"));
+    graphic->add(new Decoration("Odd cells", "0"));
     return graphic;
 }
 
