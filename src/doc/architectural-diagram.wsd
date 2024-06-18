@@ -1,7 +1,6 @@
 @startuml architecture
 
-database Progress
-file Config
+database Statistics
 
 package "Game" {
     [menu]
@@ -16,14 +15,13 @@ package "Game" {
 [menu] -down- [settings]
 [menu] -down- [profiles] : switch
 
-[settings] -- [colors]
-[settings] -- [key binding]
-[settings] -- Config
+[settings] -- [graphic]
+[settings] -- [input mapping]
 
-[quest] - [quest] : adventure
 [quest] -> [menu] : lost/won
 
-[profiles] -left- Progress
+[profiles] -left- Statistics
+[quest]    -left- Statistics : write
 
 Actor User
 

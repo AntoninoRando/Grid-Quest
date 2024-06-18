@@ -12,10 +12,6 @@ while (Input given?) is (Yes)
         if (1 cell remaining?) then (Yes)
             if (match quest?) then (Yes)
                 :Victory;
-                if (is this last quest?) then (No)
-                    :New quest;
-                    detach
-                endif
             else (No)
                 :Lost;
             endif

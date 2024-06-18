@@ -9,7 +9,13 @@ Player -right-> (Profile) : Create
 Player -right-> (Profile) : Edit
 Player -right-> (Profile) : Delete
 
-System -down-> (Score) : Save/Load
+System -down-> (Score) : Save/Load/Show
 System -left-> (Profile) : Save/Load
+
+Player -right-> (Game) : Play
+Player -right-> (Game) : Pause
+Player -right-> (Game) : Stop
+
+System --> (Game) : Save
 
 @enduml
