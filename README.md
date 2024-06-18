@@ -1,6 +1,6 @@
 # Grid Quest
 
-A minimal console game in which your goal is to reduce a grid of numbers up to a single specific result.
+A minimal console game in which your goal is to reduce a grid of numbers up to a single value.
 
 The game is meant to be played in spare times, when you are at your computer and want something fast and relaxing. It does not require expensive setup, neither does it requires much computer's power and memory, so it is perfect to run and play instantly.
 
