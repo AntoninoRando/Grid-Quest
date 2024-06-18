@@ -88,7 +88,8 @@ enum SettingType
 {
     KEYBIND,
     DECORATION,
-    CATEGORY
+    CATEGORY,
+    PROFILEINFO
 };
 
 /**
@@ -163,8 +164,7 @@ public:
      * @return std::optional<Setting *> An optional with the setting, it it was
      * found; an empty optional otherwise.
      */
-    virtual std::optional<Setting *>
-    findSetting(std::string settingName)
+    virtual std::optional<Setting *> findSetting(std::string settingName)
     {
         return std::optional<Setting *>{};
     }
@@ -279,10 +279,51 @@ public:
     SettingType type() const override { return DECORATION; }
 };
 
+/**
+ * @brief An information about the user profile (e.g., name, score, etc.).
+ */
+class ProfileInfo : public Setting
+{
+public:
+    ProfileInfo(std::string name, std::string value);
+    std::string Change(std::string) override;
+    std::string ChangeWithInput() override;
+    std::string ToString() const override;
+    SettingType type() const override { return PROFILEINFO; }
+};
+
+/**
+ * @brief Create a category containing all controls settings and configure them
+ * with default values.
+ *
+ * @return Category* The category containing the default controls settings.
+ */
 Category *DefaultControls();
 
+/**
+ * @brief Create a category containing all graphic settings and configure them
+ * with default values.
+ *
+ * @return Category* The category containing the default graphic settings.
+ */
 Category *DefaultGraphic();
 
+/**
+ * @brief Create a category containing all profile settings and configure them
+ * with default values.
+ *
+ * @return Category* The category containing the default profile settings.
+ */
+Category *DefaultProfile();
+
+/**
+ * @brief Parse the file at `filePath` and fill the `settings` category with the
+ * parsed settings.
+ *
+ * @param settings The category of settings where the configuration is stored.
+ * @param filePath The path to the file containing the settings.
+ * @return int 1 if an error occurred, 0 otherwise.
+ */
 int parseSettings(Category *settings, std::string filePath);
 
 /**
@@ -300,6 +341,11 @@ public:
      * @brief The category that groups decoration settings.
      */
     static Category *graphic;
+
+    /**
+     * @brief The category that groups profile info.
+     */
+    static Category *profileInfo;
 
     /**
      * @brief Return the value of the KeyBind named `keyName`. If a KeyBind

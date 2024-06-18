@@ -142,6 +142,28 @@ std::string Decoration::ToString() const
     return name_ + ": " + value_ + "m";
 }
 
+ProfileInfo::ProfileInfo(std::string name, std::string value)
+{
+    name_ = name;
+    value_ = value;
+}
+
+std::string ProfileInfo::Change(std::string newValue)
+{
+    value_ = newValue;
+    return "";
+}
+
+std::string ProfileInfo::ChangeWithInput()
+{
+    return "E: Access-denied";
+}
+
+std::string ProfileInfo::ToString() const
+{
+    return name_ + ": " + value_;
+}
+
 Category::Category(std::string name)
 {
     name_ = name;
@@ -236,34 +258,44 @@ Category *DefaultGraphic()
     return graphic;
 }
 
+Category *DefaultProfile()
+{
+    Category *pinfo = new Category("Profile");
+    pinfo->add(new ProfileInfo("Nickname", "Main"));
+    pinfo->add(new ProfileInfo("Game Played", "0"));
+    pinfo->add(new ProfileInfo("Game Won", "0"));
+    pinfo->add(new ProfileInfo("Game Lost", "0"));
+    pinfo->add(new ProfileInfo("Win Rate", "0%"));
+    return pinfo;
+}
+
 int parseSettings(Category *settings, std::string filePath)
 {
     std::string line;
     std::ifstream settingsFile(filePath);
-    if (settingsFile.is_open())
-    {
-        std::string section;
-        while (getline(settingsFile, line))
-        {
-            std::string error = settings->Change(line);
-
-            if (error.length() > 0 && error[0] == 'E')
-                throw std::invalid_argument(error);
-        }
-        settingsFile.close();
-    }
-    else
+    if (!settingsFile.is_open())
         return 1;
+
+    std::string section;
+    while (getline(settingsFile, line))
+    {
+        std::string error = settings->Change(line);
+        if (error.length() > 0 && error[0] == 'E')
+            throw std::invalid_argument(error);
+    }
+    settingsFile.close();
     return 0;
 }
 
 Category *GlobalSettings::controls;
 Category *GlobalSettings::graphic;
+Category *GlobalSettings::profileInfo;
 
 void GlobalSettings::load()
 {
     GlobalSettings::controls = DefaultControls();
     GlobalSettings::graphic = DefaultGraphic();
+    GlobalSettings::profileInfo = DefaultProfile();
     parseSettings(GlobalSettings::controls, "etc/savedSettings/controls.txt");
     parseSettings(GlobalSettings::graphic, "etc/savedSettings/graphic.txt");
 }

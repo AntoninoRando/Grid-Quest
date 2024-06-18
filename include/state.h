@@ -160,16 +160,18 @@ class Settings : public State
 {
     int currentSection = 0;
     int currentSectionPosition = 0;
-    Category *sections[2] = {
+    Category *sections[3] = {
         GlobalSettings::controls,
-        GlobalSettings::graphic};
-    int sectionsCursorOffset[2] = {};
-    int numberOfSections = 2;
+        GlobalSettings::graphic,
+        GlobalSettings::profileInfo};
+    int sectionsCursorOffset[3] = {};
+    int numberOfSections = 3;
     bool selected = false;
     int currentSetting = 0;
-    std::list<Setting *> settings[2] = {
+    std::list<Setting *> settings[3] = {
         GlobalSettings::controls->GetChildrenList(),
-        GlobalSettings::graphic->GetChildrenList()};
+        GlobalSettings::graphic->GetChildrenList(),
+        GlobalSettings::profileInfo->GetChildrenList()};
     opSet selectedSetting = {};
     std::string error = "";
 

@@ -70,7 +70,7 @@ void Settings::setup()
     }
 
     std::cout << '\n';
-    for (int i = 0; i < 36; i++)
+    for (int i = 0; i < 50; i++)
         std::cout << "—";
     std::cout << '\n';
 }
