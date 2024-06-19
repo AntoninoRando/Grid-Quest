@@ -5,7 +5,7 @@ DROP FUNCTION IF EXISTS add_user;
 DROP FUNCTION IF EXISTS add_game_session(m_str, TIMESTAMP);
 DROP FUNCTION IF EXISTS add_game_session(m_str, BIGINT);
 DROP FUNCTION IF EXISTS add_game_scene;
-
+DROP FUNCTION IF EXISTS last_profile_to_play;
 
 -- Function to add a user to the database. It returns TRUE if the user was
 -- successfully added, and FALSE if the user already exists. No errors are
@@ -71,7 +71,7 @@ CREATE FUNCTION add_game_session(pl m_str, start_epoch BIGINT)
 AS $$
 DECLARE
 	start_stamp TIMESTAMP;
-	session_id INT;
+	session_id  INT;
 BEGIN
 	SELECT TO_TIMESTAMP(start_epoch / 1000)  INTO start_stamp;
 	SELECT add_game_session(pl, start_stamp) INTO session_id;
@@ -94,7 +94,7 @@ CREATE FUNCTION add_game_scene(
 AS $$
 DECLARE
 	already_exists BOOL;
-	dr_int INTERVAL;
+	dr_int         INTERVAL;
 BEGIN
     SELECT EXISTS(
         SELECT * 
@@ -117,6 +117,46 @@ BEGIN
         (session_id, scene_order, stype, dr_int, mw, aw);
 	
 	RETURN TRUE;
+END;
+$$;
+
+-- Find the last profile the user used to play a game before they quit.
+CREATE FUNCTION last_profile_to_play()
+    RETURNS m_str
+    LANGUAGE plpgsql
+AS $$
+DECLARE
+    no_player   BOOL;
+    no_session  BOOL;
+    last_player m_str;
+BEGIN
+    SELECT NOT EXISTS (                         -- Check at least one player exists.
+        SELECT * 
+        FROM Profile
+        LIMIT 1
+    ) INTO no_player;
+
+    IF no_player THEN
+        RAISE INFO 'No player has played the game yet';
+        RETURN NULL;
+    END IF;
+    
+    SELECT player                -- Find the player who played the last session.
+    FROM Session
+    WHERE startstamp = (
+        SELECT MAX(startstamp)
+        FROM Session
+    ) INTO last_player;
+
+    IF last_player IS NULL THEN    -- If no session was played, get last created
+        SELECT nickname                                                -- player
+		INTO last_player
+        FROM Profile
+        ORDER BY creation DESC
+		LIMIT 1;
+    END IF;
+	
+	RETURN last_player;
 END;
 $$;
 
