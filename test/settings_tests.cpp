@@ -4,7 +4,7 @@
 TEST(KeyBindChange, LettersAndNumbers)
 {
     KeyBind key("test", 'a');
-    for (auto c : "abcdefghijklmnopqrstuvwxyz0123456789")
+    for (auto c : "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
     {
         EXPECT_EQ("", key.validate(std::string(1, c)));
     }
@@ -82,4 +82,56 @@ TEST(DecorationChange, OKFormats)
     {
         EXPECT_EQ("", dec.validate(c));
     }
+}
+
+TEST(NicknameChange, EmptyNick)
+{
+    ProfileInfo pinfo("Nickname", "test");
+    EXPECT_EQ("E: Nickname-must-be-between-1-and-100-characters-long", pinfo.validate(""));
+}
+
+TEST(NicknameChange, TooLongNick)
+{
+    ProfileInfo pinfo("Nickname", "test");
+    for (int i = 101; i < 200; i++)
+    {
+        EXPECT_EQ("E: Nickname-must-be-between-1-and-100-characters-long", pinfo.validate(std::string(i, 'a')));
+    }
+}
+
+TEST(NicknameChange, WhiteSpaces)
+{
+    ProfileInfo pinfo("Nickname", "test");
+    for (auto c : {" ", "  ", "   ", "a ", " a", "a b", "\t", "\n", "\b", "\v", "\r"})
+    {
+        EXPECT_EQ("E: Nickname-must-contain-only-alphanumeric-characters", pinfo.validate(c));
+    }
+}
+
+TEST(NicknameChange, UnicodeWhiteSpaces)
+{
+    // https://stackoverflow.com/questions/18169006/all-the-whitespace-characters-is-it-language-independent
+    ProfileInfo pinfo("Nickname", "test");
+    for (auto c : {"\u0020", "\u00A0", "\u1680", "\u2000", "\u2001", "\u2002", "\u2003", "\u2004", "\u2005", "\u2006", "\u2007", "\u2008", "\u2009", "\u200A", "\u202F", "\u205F", "\u3000"})
+    {
+        EXPECT_EQ("E: Nickname-must-contain-only-alphanumeric-characters", pinfo.validate(c));
+    }
+}
+
+TEST(NicknameChange, OKFormats)
+{
+    ProfileInfo pinfo("Nickname", "test");
+    for (int i = 1; i <= 100; i++)
+    {
+        for (auto c : "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+        {
+            if (c == '\0')
+                continue;
+            EXPECT_EQ("", pinfo.validate(std::string(i, c)));
+        }
+    }
+
+    EXPECT_EQ("", pinfo.validate("test_123"));
+    EXPECT_EQ("", pinfo.validate("test_"));
+    EXPECT_EQ("", pinfo.validate("______"));
 }

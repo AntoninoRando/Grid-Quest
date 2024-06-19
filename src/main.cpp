@@ -26,7 +26,7 @@ void addNewUser(std::string nickname, pqxx::work *addUserWork)
             pqxx::result result = addUserWork->exec("SELECT add_user('" + nickname + "', CURRENT_DATE)");
             bool added = result[0][0].as<bool>();
             if (!added)
-                std::cout << "E: Nickname already in use.\n";
+                std::cout << "E: Nickname-already-in-use.\n";
             else
                 return;
         }

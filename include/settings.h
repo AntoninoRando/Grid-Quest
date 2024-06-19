@@ -286,6 +286,7 @@ class ProfileInfo : public Setting
 {
 public:
     ProfileInfo(std::string name, std::string value);
+    std::string validate(std::string) override;
     std::string Change(std::string) override;
     std::string ChangeWithInput() override;
     std::string ToString() const override;

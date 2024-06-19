@@ -148,6 +148,24 @@ ProfileInfo::ProfileInfo(std::string name, std::string value)
     value_ = value;
 }
 
+std::string ProfileInfo::validate(std::string newValue)
+{
+    if (name_ != "Nickname")
+        return "";
+
+    int newValueSize = newValue.size();
+    if (newValueSize == 0 || newValueSize > 100)
+        return "E: Nickname-must-be-between-1-and-100-characters-long";
+
+    for (auto c : newValue)
+    {
+        if (!std::isalnum(c) && c != '_')
+            return "E: Nickname-must-contain-only-alphanumeric-characters";
+    }
+
+    return "";
+}
+
 std::string ProfileInfo::Change(std::string newValue)
 {
     if (name_ != "Nickname")
@@ -156,10 +174,12 @@ std::string ProfileInfo::Change(std::string newValue)
         return "";
     }
 
-    int newValueSize = newValue.size();
-    if (newValueSize == 0 || newValueSize > 100)
-        return "E: Nickname-must-be-between-1-and-100-characters-long";
+    std::string error = validate(newValue);
+    if (error.length() > 0)
+        return "E: " + error;
 
+    Redis::get() << "use-nickname " << newValue;
+    Redis::get().push();
     value_ = newValue;
     return "";
 }
