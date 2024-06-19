@@ -2,9 +2,36 @@
 #include "settings.h"
 #include "monitors.h"
 #include <conio.h>
+#include <pqxx/pqxx>
 
 // We use W-A-S-D for movement because the _getchr() return twice with arrows keys:
 // https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/078sfkak(v=vs.100)?redirectedfrom=MSDN
+
+void addNewUser(std::string nickname, pqxx::work *addUserWork)
+{
+    std::string error;
+
+    while (true)
+    {
+        std::cout << "Enter a nickname: ";
+        std::getline(std::cin, nickname);
+        std::cout << "\n";
+
+        error = GlobalSettings::profileInfo->Change("Nickname = " + nickname);
+
+        if (error.length() > 0)
+            std::cout << error << "\n";
+        else
+        {
+            pqxx::result result = addUserWork->exec("SELECT add_user('" + nickname + "', CURRENT_DATE)");
+            bool added = result[0][0].as<bool>();
+            if (!added)
+                std::cout << "E: Nickname already in use.\n";
+            else
+                return;
+        }
+    }
+}
 
 int main()
 {
@@ -19,6 +46,32 @@ int main()
     }
 
     GlobalSettings::load();
+
+    pqxx::connection sqlConn("postgresql://postgres:postgres@localhost/gridquest");
+    pqxx::work fetchProfile(sqlConn);
+    std::string nickname("");
+    try
+    {
+        pqxx::result fetchResult = fetchProfile.exec("SELECT * FROM last_profile_to_play()");
+        nickname = fetchResult[0][0].as<std::string>();
+        GlobalSettings::profileInfo->Change("Nickname = " + nickname);
+        fetchProfile.commit();
+    }
+    catch (const pqxx::sql_error &e)
+    {
+        fetchProfile.commit();
+        pqxx::work addUserWork(sqlConn);
+        addNewUser(nickname, &addUserWork);
+        addUserWork.commit();
+    }
+    catch (const std::exception &e)
+    {
+        fetchProfile.commit();
+        pqxx::work addUserWork(sqlConn);
+        addNewUser(nickname, &addUserWork);
+        addUserWork.commit();
+    }
+
     std::cout << "\u001b[" + BG_COL + "m";
 
     Context game;

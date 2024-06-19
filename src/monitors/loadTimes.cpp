@@ -28,8 +28,8 @@ public:
 
     void execCommitQueries(pqxx::work transaction) override
     {
-        query_ << "SELECT add_game_session('" 
-               << player << "', " 
+        query_ << "SELECT add_game_session('"
+               << player << "', "
                << startTime << ")";
         std::string query = prettyPrintQuery();
 
@@ -79,7 +79,7 @@ public:
     }
     void execCommitQueries(pqxx::work transaction) override
     {
-        query_<< "SELECT add_game_scene("
+        query_ << "SELECT add_game_scene("
                << session << ", "
                << ord << ", "
                << "'" << sceneName << "', "
@@ -131,7 +131,7 @@ void readStreamString(const char *str,
         if (currentState != nullptr)
             sessionID = currentState->id;
         else
-        {
+        {   
             ParserScene *sc = dynamic_cast<ParserScene *>(context.state());
             sessionID = sc->session;
             sceneOrd = sc->ord + 1;

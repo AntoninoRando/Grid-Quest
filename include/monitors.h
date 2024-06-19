@@ -49,9 +49,6 @@ public:
 
 class ParserContext;
 
-/**
- * @brief A state of the game (e.g., Menu, Profile, New Game).
- */
 class ParserState
 {
 protected:
@@ -63,17 +60,15 @@ public:
      * @brief Change the current context.
      */
     void setContext(ParserContext *context) { context_ = context; }
+    
     /**
-     * @brief DExecute the SQL query to commit the information parsed in this
+     * @brief Execute the SQL query to commit the information parsed in this
      * state.
      */
     virtual void execCommitQueries(pqxx::work) = 0;
     std::string prettyPrintQuery();
 };
 
-/**
- * @brief The current game state.
- */
 class ParserContext
 {
     ParserState *state_ = nullptr;

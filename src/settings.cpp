@@ -150,6 +150,16 @@ ProfileInfo::ProfileInfo(std::string name, std::string value)
 
 std::string ProfileInfo::Change(std::string newValue)
 {
+    if (name_ != "Nickname")
+    {
+        value_ = newValue;
+        return "";
+    }
+
+    int newValueSize = newValue.size();
+    if (newValueSize == 0 || newValueSize > 100)
+        return "E: Nickname-must-be-between-1-and-100-characters-long";
+
     value_ = newValue;
     return "";
 }
