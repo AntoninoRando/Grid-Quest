@@ -38,7 +38,7 @@ CREATE TABLE Profile (
 	nickname m_str PRIMARY KEY,
 
     -- Other attributes
-	creation DATE  NOT NULL
+	creation TIMESTAMP  NOT NULL
 );
 
 -- A gaming session of a player (i.e., from when they opened the game to when

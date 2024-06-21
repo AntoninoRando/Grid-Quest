@@ -1,7 +1,8 @@
 BEGIN TRANSACTION;
 
 
-DROP FUNCTION IF EXISTS add_user;
+DROP FUNCTION IF EXISTS add_user(m_str, TIMESTAMP);
+DROP FUNCTION IF EXISTS add_user(m_str, BIGINT);
 DROP FUNCTION IF EXISTS add_game_session(m_str, TIMESTAMP);
 DROP FUNCTION IF EXISTS add_game_session(m_str, BIGINT);
 DROP FUNCTION IF EXISTS add_game_scene;
@@ -10,7 +11,7 @@ DROP FUNCTION IF EXISTS last_profile_to_play;
 -- Function to add a user to the database. It returns TRUE if the user was
 -- successfully added, and FALSE if the user already exists. No errors are
 -- thrown if the user already exists.
-CREATE FUNCTION add_user(nick m_str, creation_date DATE)
+CREATE FUNCTION add_user(nick m_str, creation_date TIMESTAMP)
 	RETURNS BOOLEAN
 	LANGUAGE plpgsql
 AS $$
@@ -32,6 +33,22 @@ BEGIN
         (nick, creation_date);
     
     RETURN TRUE;
+END;
+$$;
+
+-- The overloaded version of 'add_user' in which the session start time is in
+-- epoch (in milliseconds).
+CREATE FUNCTION add_user(nick m_str, creation_epoch BIGINT)
+	RETURNS BOOLEAN
+	LANGUAGE plpgsql
+AS $$
+DECLARE
+    creation_date TIMESTAMP;
+    already_exists BOOLEAN;
+BEGIN
+    SELECT TO_TIMESTAMP(creation_epoch / 1000)  INTO creation_date;
+    SELECT add_user(nick, creation_date) INTO already_exists;
+    RETURN already_exists;
 END;
 $$;
 
