@@ -9,215 +9,262 @@
 #include <pqxx/pqxx>
 #include <format>
 
-using std::map, std::optional, std::string, std::list, std::pair;
-using opChar = optional<const char *>;
+using std::string;
 
-class ParserSession : public ParserState
+// Below we define the MonitorState classes that implement the state-transaction
+// function for the monitor `SessionTracker`.
+
+/**
+ * @brief The monitor state in which a new user has been read in the Redis
+ * stream and it should now be added to the database.
+ */
+class AddUser : public MonitorState
 {
-    std::string player;
-    long long startTime;
+    string player_;
+    string addTime_;
 
 public:
-    int id = -1;
-
-    ParserSession(std::string player, long long startTime)
+    AddUser(string player, string addTime)
     {
-        this->player = player;
-        this->startTime = startTime;
+        player_ = player;
+        addTime_ = addTime;
     }
 
-    void execCommitQueries(pqxx::work transaction) override
+    bool execCommitQueries(pqxx::work transaction) override
     {
-        query_ << "SELECT add_game_session('"
-               << player << "', "
-               << startTime << ")";
+        // The SQL add_user function will do nothing if this user already
+        // exists, thus it is safe to use without checks.
+        query_ << "SELECT add_user('"
+               << player_ << "', "
+               << addTime_ << ")";
         std::string query = prettyPrintQuery();
 
         try
         {
             pqxx::result res = transaction.exec(query);
-            id = res[0][0].as<int>();
-            std::cout << "Query executed successfully\n"
-                      << "\t(result) Session ID: " << id << "\n";
+            bool userAdded = res[0][0].as<bool>();
+            std::cout << "\033[32m(RESULT)\033[0m " << userAdded << "\n";
+            transaction.commit();
+            return true;
         }
         catch (const pqxx::sql_error &e)
         {
-            std::cerr << "SQL Error: " << e.what() << '\n';
+            std::cerr << "\033[91m(RESULT)\033[0m " << e.what() << '\n';
             transaction.abort();
-            return;
         }
         catch (const std::exception &e)
         {
             std::cerr << "Error: " << e.what() << '\n';
             transaction.abort();
-            return;
         }
-
-        transaction.commit();
+        return false;
     }
 };
 
-class ParserScene : public ParserState
+/**
+ * @brief The monitor state in which a new user session has been read on the
+ * Redis stream and it should be now added to the database.
+ */
+class AddSession : public MonitorState
 {
-    std::string sceneName;
-    long long startTime;
+    string player_;
+    string addTime_;
+    int id_ = -2;
 
 public:
-    int ord;
-    int session;
-    long long endTime;
-    float maxWait = 0;
-    float avgWait = 0;
-    int count = 0;
-
-    ParserScene(int session, std::string sceneName, long long startTime, int ord)
+    AddSession(string player, string addTime)
     {
-        this->session = session;
-        this->sceneName = sceneName;
-        this->startTime = startTime;
-        this->ord = ord;
+        player_ = player;
+        addTime_ = addTime;
     }
-    void execCommitQueries(pqxx::work transaction) override
+
+    int id() { return id_; }
+
+    bool execCommitQueries(pqxx::work transaction) override
+    {
+        // The SQL add_user function will do nothing if this session already
+        // exists (-1 is returned), thus it is safe to use without checks.
+        query_ << "SELECT add_game_session('"
+               << player_ << "', "
+               << addTime_ << ")";
+        std::string query = prettyPrintQuery();
+
+        try
+        {
+            pqxx::result res = transaction.exec(query);
+            int queryReturn = res[0][0].as<int>();
+            std::cout << "\033[32m(RESULT)\033[0m " << queryReturn << "\n";
+            id_ = queryReturn;
+            transaction.commit();
+            return true;
+        }
+        catch (const pqxx::sql_error &e)
+        {
+            std::cerr << "\033[91m(RESULT)\033[0m " << e.what() << '\n';
+            transaction.abort();
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << "Error: " << e.what() << '\n';
+            transaction.abort();
+        }
+        return false;
+    }
+};
+
+/**
+ * @brief The monitor state in which a new user session has been read on the
+ * Redis stream and it should be now added to the database.
+ */
+class AddScene : public MonitorState
+{
+    string sceneName_;
+    string startTime_;
+    int ord_;
+    int session_;
+    string endTime_;
+    float maxWait_ = 0;
+    float avgWait_ = 0;
+    int waitCount_ = 0;
+
+public:
+    AddScene(int session, string sceneName, string startTime, int ord)
+    {
+        session_ = session;
+        sceneName_ = sceneName;
+        startTime_ = startTime;
+        ord_ = ord;
+    }
+
+    void newTime(float time)
+    {
+        waitCount_++;
+        maxWait_ = std::max(maxWait_, time);
+        avgWait_ = (avgWait_ * (waitCount_ - 1) + time) / waitCount_;
+    }
+
+    void addEndTime(string endTime) { endTime_ = endTime; }
+
+    bool execCommitQueries(pqxx::work transaction) override
     {
         query_ << "SELECT add_game_scene("
-               << session << ", "
-               << ord << ", "
-               << "'" << sceneName << "', "
-               << (endTime - startTime) << ", "
-               << maxWait << ", "
-               << avgWait << ")";
+               << session_ << ", "
+               << ord_ << ", "
+               << "'" << sceneName_ << "', "
+               << endTime_ << " - " << startTime_ << ", "
+               << maxWait_ << ", "
+               << avgWait_ << ")";
         std::string query = prettyPrintQuery();
 
         try
         {
             pqxx::result res = transaction.exec(query);
-            std::cout << "Query executed successfully\n"
-                      << "\t(result) " << res[0][0].as<bool>() << "\n";
+            std::cout << "\033[32m(RESULT)\033[0m " << res[0][0].as<bool>() << "\n";
+            transaction.commit();
+            return true;
         }
         catch (const pqxx::sql_error &e)
         {
-            std::cerr << "SQL Error: " << e.what() << '\n';
+            std::cerr << "\033[91m(RESULT)\033[0m " << e.what() << '\n';
             transaction.abort();
-            return;
         }
         catch (const std::exception &e)
         {
             std::cerr << "Error: " << e.what() << '\n';
             transaction.abort();
-            return;
         }
 
-        transaction.commit();
+        return false;
     }
 };
 
-float calculateNewAverage(float oldAverage, float newElement, int count)
+// The monitor
+
+/**
+ * @brief A monitor that tracks the users that play the game and when they play.
+ *
+ * This monitor is used to track:
+ * - New users;
+ * - Users playing sessions;
+ * - Game scenes in which users spend their time during the playing sessions;
+ * - Time users spent waiting for a game scene to load.
+ *
+ * This monitor uses 3 states to perform its job: AddUser, AddSession, AddScene.
+ */
+class SessionTracker : public Monitor
 {
-    return (oldAverage * count + newElement) / (count + 1);
-}
+    string player_;
+    int sessionId_;
+    int sceneOrd_;
+    AddScene *scene_ = nullptr;
 
-void readStreamString(const char *str,
-                      ParserContext &context,
-                      long long entryTime,
-                      opChar timeType,
-                      bool isScene)
-{
-    if (isScene && context.state() != nullptr)
+public:
+    using Monitor::Monitor; // Inherit constructor.
+
+    void stateTransition(const string id, const string key, const string value) override
     {
-        int sessionID;
-        int sceneOrd = 0;
-        context.complete();
-        ParserSession *currentState = dynamic_cast<ParserSession *>(context.state());
-        if (currentState != nullptr)
-            sessionID = currentState->id;
-        else
-        {   
-            ParserScene *sc = dynamic_cast<ParserScene *>(context.state());
-            sessionID = sc->session;
-            sceneOrd = sc->ord + 1;
-            sc->endTime = entryTime;
-        }
-        context.transitionTo(new ParserScene(sessionID, str, entryTime, sceneOrd));
-    }
-    else if (timeType.has_value() && context.state() != nullptr)
-    {
-        float time = std::stof(str);
-        ParserScene *sc = dynamic_cast<ParserScene *>(context.state());
+        // id is written in the form: "epoch-serialId", where epoch is the time
+        // the entry was written in the stream and serialId is a serial number
+        // that Redis uses to differentiate entries written in the same epoch.
+        // We are only interest in epoch.
+        string entryTime = id.substr(0, id.find("-"));
 
-        if (sc == nullptr)
-            return;
-
-        sc->count++;
-        sc->maxWait = std::max(sc->maxWait, time);
-        sc->avgWait = calculateNewAverage(sc->avgWait, time, sc->count);
-    }
-    else if (strcmp(str, "game-start") == 0)
-    {
-        context.transitionTo(new ParserSession("debug_user", entryTime));
-    }
-}
-
-int parseStream(redisReply *r,
-                ParserContext &context,
-                int level = 0,
-                long long entryTime = 0,
-                opChar timeType = {},
-                bool isScene = false)
-{
-    bool entryTimePassed = level > 1;
-    string elStr;
-    map<string, float> infos;
-    float time;
-
-    switch (r->type)
-    {
-    case REDIS_REPLY_STRING:
-        readStreamString(r->str, context, entryTime, timeType, isScene);
-        break;
-    case REDIS_REPLY_ARRAY:
-        for (size_t i = 0; i < r->elements; i++)
+        if (key == "use-nickname")
         {
-            auto el = r->element[i];
-
-            // This entry is the time at which all following entries were put
-            if (!entryTimePassed && el->type == REDIS_REPLY_STRING)
+            // Commit last scene if it exists.
+            if (scene_ != nullptr)
             {
-                elStr = el->str;
-                entryTime = std::stoll(elStr.substr(0, elStr.find("-")));
-                entryTimePassed = true;
+                scene_->addEndTime(entryTime);
+                executeStateQuery();
             }
 
-            if (parseStream(el, context, level + 1, entryTime, timeType, isScene) == -1)
-                return -1;
-
-            if (el->type == REDIS_REPLY_STRING)
-            {
-                elStr = el->str;
-                if (elStr.rfind("time(ms):", 0) == 0) // Next element is a time
-                    timeType = elStr.substr(9).c_str();
-                else
-                    timeType.reset();
-
-                isScene = (elStr == "enter-state");
-            }
-            else
-            {
-                timeType.reset();
-                isScene = false;
-            }
+            player_ = value;
+            setState(new AddUser(player_, entryTime));
+            executeStateQuery();
         }
-        break;
-    case REDIS_REPLY_STATUS:
-    case REDIS_REPLY_INTEGER:
-    case REDIS_REPLY_NIL:
-    case REDIS_REPLY_ERROR:
-        break;
-    default:
-        std::cout << "(unknown-type) " << r->type << "\n";
-        return -1;
+        else if (key == "game-start")
+        {
+            // Commit last scene if it exists.
+            if (scene_ != nullptr)
+            {
+                scene_->addEndTime(entryTime);
+                executeStateQuery();
+            }
+
+            AddSession *as = new AddSession(player_, entryTime);
+            setState(as);
+            executeStateQuery();
+            sessionId_ = as->id();
+            sceneOrd_ = 0; // Reset scene order for following scenes.
+        }
+        else if (key == "enter-state")
+        {
+            // Commit last scene if it exists.
+            if (scene_ != nullptr)
+            {
+                scene_->addEndTime(entryTime);
+                executeStateQuery();
+            }
+
+            scene_ = new AddScene(sessionId_, value, entryTime, sceneOrd_);
+            setState(scene_);
+            sceneOrd_++; // Increase ord for next scene.
+        }
+        else if (scene_ != nullptr && key.rfind("time(ms):", 0) == 0)
+        {
+            // string timeType = key.substr(9);
+            float milliseconds = std::stof(value);
+            scene_->newTime(milliseconds);
+        }
+        else if (scene_ != nullptr && key == "game-end")
+        {
+            scene_->addEndTime(entryTime);
+            executeStateQuery();
+        }
     }
-    return 0;
-}
+};
+
+// Executable for the Monitor
 
 int main()
 {
@@ -229,11 +276,7 @@ int main()
         return 1;
     }
 
-    ParserContext context("postgresql://postgres:postgres@localhost/gridquest");
-
-    auto *reply = (redisReply *)Redis::get().run("XRANGE gridquest - +");
-    int error = parseStream(reply, context);
-    assert(error != -1 && "Unexpected reply type.");
-    context.complete();
-    std::cout << "Process Completed!";
+    SessionTracker *monitor = new SessionTracker("postgresql://postgres:postgres@localhost/gridquest");
+    StreamParser::runMonitors({monitor});
+    std::cout << "\n\nProcess Completed!\n";
 }

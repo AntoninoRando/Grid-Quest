@@ -43,7 +43,7 @@ std::string ParserState::prettyPrintQuery()
     std::string sep(query.length(), '-');
     std::cout << "SQL ------------------------" << sep << "\n"
               << ">>> Executing postgreSQL query: " << query << "\n";
-    
+
     return query;
 }
 
@@ -63,4 +63,55 @@ void ParserContext::transitionTo(ParserState *state)
     state_ = state;
     state_->setContext(this);
     lastStateCompleted = false;
+}
+
+std::string MonitorState::prettyPrintQuery()
+{
+    std::string query = query_.str();
+    std::cout << "\033[93mSQL executing >>> \033[94m" << query << "\033[0m\n";
+    return query;
+}
+
+void StreamParser::runMonitors_(
+    redisReply *reply,
+    std::vector<Monitor *> monitors,
+    int replyLevel,
+    std::optional<const char *> entryId)
+{
+    if (reply->type != REDIS_REPLY_ARRAY)
+        return;
+
+    for (size_t i = 0; i < reply->elements; i++)
+    {
+        auto e1 = reply->element[i];
+
+        // if e1 was not a string, it is an array (if it is not, the recursive
+        // call will ignore it) and we need to repeat the parsing.
+        if (e1->type != REDIS_REPLY_STRING)
+        {
+            runMonitors_(e1, monitors, replyLevel + 1, entryId);
+            continue;
+        }
+
+        // e1 is a string and the stream entry id has not been found yet, thus
+        // e1 is the entry id.
+        if (!entryId.has_value())
+        {
+            entryId = {e1->str};
+            continue;
+        }
+
+        // e1 is a string and the stream entry has been found, thus e1 is a key
+        // and e2 is its value.
+        i++;
+        auto e2 = reply->element[i];
+        for (auto monitor : monitors)
+            monitor->stateTransition(entryId.value(), e1->str, e2->str);
+    }
+}
+
+void StreamParser::runMonitors(std::vector<Monitor *> monitors)
+{
+    auto *reply = (redisReply *)Redis::get().run("XRANGE gridquest - +");
+    runMonitors_(reply, monitors);
 }
