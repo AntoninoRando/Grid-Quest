@@ -216,6 +216,7 @@ public:
             {
                 scene_->addEndTime(entryTime);
                 executeStateQuery();
+                scene_ = nullptr;
             }
 
             player_ = value;
@@ -229,6 +230,7 @@ public:
             {
                 scene_->addEndTime(entryTime);
                 executeStateQuery();
+                scene_ = nullptr;
             }
 
             AddSession *as = new AddSession(player_, entryTime);
@@ -260,6 +262,7 @@ public:
         {
             scene_->addEndTime(entryTime);
             executeStateQuery();
+            scene_ = nullptr;
         }
     }
 };

@@ -50,44 +50,6 @@ public:
     }
 };
 
-class ParserContext;
-
-class ParserState
-{
-protected:
-    ParserContext *context_;
-    std::stringstream query_;
-
-public:
-    /**
-     * @brief Change the current context.
-     */
-    void setContext(ParserContext *context) { context_ = context; }
-
-    /**
-     * @brief Execute the SQL query to commit the information parsed in this
-     * state.
-     */
-    virtual void execCommitQueries(pqxx::work) = 0;
-    std::string prettyPrintQuery();
-};
-
-class ParserContext
-{
-    ParserState *state_ = nullptr;
-    pqxx::connection *connection;
-    bool lastStateCompleted = true;
-
-public:
-    ParserContext(const char *db_url)
-    {
-        connection = new pqxx::connection(db_url);
-    }
-    ParserState *state() { return state_; }
-    void complete();
-    void transitionTo(ParserState *state);
-};
-
 // Monitor and MonitorState implement the State pattern:
 // https://refactoring.guru/design-patterns/state
 

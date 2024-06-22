@@ -37,34 +37,6 @@ void *Redis::push()
     return result;
 }
 
-std::string ParserState::prettyPrintQuery()
-{
-    std::string query = query_.str();
-    std::string sep(query.length(), '-');
-    std::cout << "SQL ------------------------" << sep << "\n"
-              << ">>> Executing postgreSQL query: " << query << "\n";
-
-    return query;
-}
-
-void ParserContext::complete()
-{
-    if (lastStateCompleted)
-        return;
-
-    state_->execCommitQueries(pqxx::work(*connection));
-    lastStateCompleted = true;
-}
-
-void ParserContext::transitionTo(ParserState *state)
-{
-    if (!lastStateCompleted)
-        complete();
-    state_ = state;
-    state_->setContext(this);
-    lastStateCompleted = false;
-}
-
 std::string MonitorState::prettyPrintQuery()
 {
     std::string query = query_.str();

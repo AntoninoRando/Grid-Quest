@@ -59,14 +59,14 @@ int main()
     }
     catch (const pqxx::sql_error &e)
     {
-        fetchProfile.commit();
+        fetchProfile.abort();
         pqxx::work addUserWork(sqlConn);
         addNewUser(nickname, &addUserWork);
         addUserWork.commit();
     }
     catch (const std::exception &e)
     {
-        fetchProfile.commit();
+        fetchProfile.abort();
         pqxx::work addUserWork(sqlConn);
         addNewUser(nickname, &addUserWork);
         addUserWork.commit();
