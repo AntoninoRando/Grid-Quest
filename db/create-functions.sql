@@ -3,6 +3,7 @@ BEGIN TRANSACTION;
 
 DROP FUNCTION IF EXISTS add_user(m_str, TIMESTAMP);
 DROP FUNCTION IF EXISTS add_user(m_str, BIGINT);
+DROP FUNCTION IF EXISTS delete_user(m_str);
 DROP FUNCTION IF EXISTS add_game_session(m_str, TIMESTAMP);
 DROP FUNCTION IF EXISTS add_game_session(m_str, BIGINT);
 DROP FUNCTION IF EXISTS add_game_scene;
@@ -49,6 +50,33 @@ BEGIN
     SELECT TO_TIMESTAMP(creation_epoch / 1000)  INTO creation_date;
     SELECT add_user(nick, creation_date) INTO already_exists;
     RETURN already_exists;
+END;
+$$;
+
+-- Function to delete a user from the database, with all its associated data.
+-- It returns TRUE if the user was successfully deleted, and FALSE if the user
+-- does not exist. No errors are thrown if the user does not exist.
+CREATE FUNCTION delete_user(nick m_str)
+    RETURNS BOOLEAN
+    LANGUAGE plpgsql
+AS $$
+DECLARE
+    user_exists BOOLEAN;
+BEGIN
+    SELECT EXISTS(
+        SELECT * 
+        FROM Profile 
+        WHERE nickname = nick) INTO user_exists;
+    
+    IF NOT user_exists THEN
+        RAISE INFO 'User % does not exist', nick;
+        RETURN FALSE;
+    END IF;
+        
+    DELETE FROM Profile
+    WHERE nickname = nick;
+    
+    RETURN TRUE;
 END;
 $$;
 

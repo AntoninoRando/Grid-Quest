@@ -53,7 +53,7 @@ CREATE TABLE Session (
 
     -- CONSTRAINTS
     UNIQUE (player, startstamp),
-	FOREIGN KEY (player) REFERENCES Profile(nickname)
+	FOREIGN KEY (player) REFERENCES Profile(nickname) ON DELETE CASCADE
 );
 
 -- A game scene and its wait times to load.
@@ -70,7 +70,7 @@ CREATE TABLE Scene (
     avg_wait       REAL       NOT NULL,
 
     -- CONSTRAINTS
-	FOREIGN KEY (player_session) REFERENCES session(id),
+	FOREIGN KEY (player_session) REFERENCES session(id) ON DELETE CASCADE,
     CONSTRAINT non_negative_ord CHECK (ord >= 0)
 );
 

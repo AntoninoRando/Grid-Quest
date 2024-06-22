@@ -4,7 +4,7 @@
 
 object Profile {
     <u>nickname: str</u>
-    creation: date
+    creation: timestamp
 }
 
 object Session {
