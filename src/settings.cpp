@@ -6,6 +6,7 @@
 #include <conio.h>
 #include <regex>
 #include <sstream>
+#include <pqxx/pqxx>
 
 KeyBind::KeyBind(std::string name, char key)
 {
@@ -63,10 +64,7 @@ std::string KeyBind::ChangeWithInput()
     return Change(std::string(1, newKey));
 }
 
-std::string KeyBind::ToString() const
-{
-    return name_ + ": " + value_;
-}
+std::string KeyBind::ToString() const { return name_ + ": " + value_; }
 
 Decoration::Decoration(std::string name, std::string code)
 {
@@ -137,10 +135,7 @@ std::string Decoration::ChangeWithInput()
     return Change(line);
 }
 
-std::string Decoration::ToString() const
-{
-    return name_ + ": " + value_ + "m";
-}
+std::string Decoration::ToString() const { return name_ + ": " + value_ + "m"; }
 
 ProfileInfo::ProfileInfo(std::string name, std::string value)
 {
@@ -184,20 +179,48 @@ std::string ProfileInfo::Change(std::string newValue)
     return "";
 }
 
-std::string ProfileInfo::ChangeWithInput()
+std::string ProfileInfo::ChangeWithInput() { return "E: Access-denied"; }
+
+std::string ProfileInfo::ToString() const { return name_ + ": " + value_; }
+
+std::string Button::ChangeWithInput()
 {
-    return "E: Access-denied";
+    std::cout << "Confirm? (y/n) ";
+    char input = _getch();
+    if (input == 'y')
+        return Change(value_);
+    return "";
 }
 
-std::string ProfileInfo::ToString() const
+std::string DeleteProfile::Change(std::string _)
 {
-    return name_ + ": " + value_;
+    pqxx::connection sqlConn("postgresql://postgres:postgres@localhost/gridquest");
+    pqxx::work delProfile(sqlConn);
+    std::string profile = CURRENT_PROFILE;
+
+    try
+    {
+        pqxx::result res = delProfile.exec("SELECT delete_user('" + profile + "')");
+        delProfile.commit();
+
+        if (res[0][0].as<bool>()) // Profile successfully deleted
+            exit(0);              // @todo: Implement restart instead of exit
+
+        return "";
+    }
+    catch (const pqxx::sql_error &e)
+    {
+        delProfile.abort();
+    }
+    catch (const std::exception &e)
+    {
+        delProfile.abort();
+    }
+
+    return "E: Could-not-delete-profile";
 }
 
-Category::Category(std::string name)
-{
-    name_ = name;
-}
+std::string Button::ToString() const { return name_; }
 
 std::string Category::Change(std::string newOption)
 {
@@ -296,6 +319,7 @@ Category *DefaultProfile()
     pinfo->add(new ProfileInfo("Game Won", "0"));
     pinfo->add(new ProfileInfo("Game Lost", "0"));
     pinfo->add(new ProfileInfo("Win Rate", "0%"));
+    pinfo->add(new DeleteProfile("Delete Profile"));
     return pinfo;
 }
 

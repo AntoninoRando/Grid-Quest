@@ -81,6 +81,8 @@
  */
 #define OCELLS_COL GlobalSettings::getDecoration("Odd cells")
 
+#define CURRENT_PROFILE GlobalSettings::profileInfo->findSetting("Nickname").value()->GetValue();
+
 #define ENTER '\r'
 #define ESC 27
 
@@ -89,7 +91,8 @@ enum SettingType
     KEYBIND,
     DECORATION,
     CATEGORY,
-    PROFILEINFO
+    PROFILEINFO,
+    BUTTON
 };
 
 /**
@@ -218,8 +221,7 @@ protected:
     std::map<std::string, Setting *> children_;
 
 public:
-    Category(std::string name);
-
+    Category(std::string name) { name_ = name; };
     std::map<std::string, Setting *> GetChildren() override { return children_; }
 
     std::list<Setting *> GetChildrenList() override
@@ -291,6 +293,26 @@ public:
     std::string ChangeWithInput() override;
     std::string ToString() const override;
     SettingType type() const override { return PROFILEINFO; }
+};
+
+/**
+ * @brief An setting that is not configurable, but can be used to trigger some
+ * action (e.g., save the game, exit the game, etc.).
+ */
+class Button : public Setting
+{
+public:
+    Button(std::string name) { name_ = name; };
+    std::string ChangeWithInput() override;
+    std::string ToString() const override;
+    SettingType type() const override { return BUTTON; }
+};
+
+class DeleteProfile : public Button
+{
+public:
+    DeleteProfile(std::string name) : Button(name) {}
+    std::string Change(std::string) override;
 };
 
 /**

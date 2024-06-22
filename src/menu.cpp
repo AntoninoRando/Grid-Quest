@@ -5,7 +5,7 @@
 void Menu::highlightOption(int option) const
 {
     option %= sizeof(options) / sizeof(std::string);
-    setCursorPosition(0, option);
+    setCursorPosition(1, option + 2); // 2 is the offset of the first option
     std::cout << "   " << "\u001b[" + SEL_COL + "m" << " "
               << options[option]
               << " " << "\u001b[0m\u001b[" + BG_COL + "m";
@@ -13,15 +13,18 @@ void Menu::highlightOption(int option) const
 
 void Menu::resetOption(int option)
 {
-    setCursorPosition(0, currentOption);
+    setCursorPosition(1, currentOption + 2); // 2 is the offset of the first option
     std::cout << options[currentOption] << "         ";
 }
 
 void Menu::setup()
 {
     clearConsole();
+    std::string profile = CURRENT_PROFILE;
+    std::cout << " " << profile << "\n\n";
+
     for (const auto option : options)
-        std::cout << option << '\n';
+        std::cout << " " << option << '\n';
     highlightOption(currentOption);
 }
 
@@ -41,17 +44,11 @@ void Menu::processInput(char input)
     else if (input == ENTER)
     {
         if (options[currentOption] == "Play")
-        {
             context_->transitionTo(new Quest);
-            return;
-        }
-        if (options[currentOption] == "Settings")
-        {
+        else if (options[currentOption] == "Settings")
             context_->transitionTo(new Settings);
-            return;
-        }
-        context_->transitionTo(new Bye);
-        return;
+        else if (options[currentOption] == "Exit")
+            context_->transitionTo(new Bye);
     }
     currentOption = posMod(currentOption, 3);
 }
