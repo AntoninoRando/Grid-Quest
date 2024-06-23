@@ -6,10 +6,7 @@
 #include <optional>
 #include <chrono>
 
-void State::setup()
-{
-    clearConsole();
-}
+void State::setup() { clearConsole(); }
 
 void Context::transitionTo(State *state)
 {
@@ -31,10 +28,7 @@ void Context::show() const
     Redis::get().push();
 }
 
-void Context::processInput(char input)
-{
-    state_->processInput(input);
-}
+void Context::processInput(char input) { state_->processInput(input); }
 
 void Bye::setup()
 {
@@ -45,32 +39,15 @@ void Bye::setup()
     exit(0); //@TODO: replace this with a more elegant solution
 }
 
-void Victory::show() const
-{
-    std::cout << "You won!\n"
-              << "Press any key to continue...";
-}
+void Victory::show() const { std::cout << "You won!\nPress any key to continue..."; }
 
-void Victory::processInput(char input)
-{
-    context_->transitionTo(new Menu);
-}
+void Victory::processInput(char input) { context_->transitionTo(new Menu); }
 
-void Defeat::show() const
-{
-    std::cout << "You lost!\n"
-              << "Press any key to continue...";
-}
+void Defeat::show() const { std::cout << "You lost!\nPress any key to continue..."; }
 
-void Defeat::processInput(char input)
-{
-    context_->transitionTo(new Menu);
-}
+void Defeat::processInput(char input) { context_->transitionTo(new Menu); }
 
-bool Quest::isEnd()
-{
-    return grid.contRemaining() == 1 || hp <= 0;
-}
+bool Quest::isEnd() { return grid.contRemaining() == 1 || hp <= 0; }
 
 Quest::Quest()
 {
@@ -82,7 +59,9 @@ Quest::Quest()
     grid.fill(fillAmount);
     srand(time(nullptr));
     quest = rand() % 100 + 1;
-    Redis::get() << "quest-start 1";
+    Redis::get() << "quest-start 1 "
+                 << "quest-grid " << grid.toString() << " "
+                 << "quest-goal " << quest;
     Redis::get().push();
 }
 
@@ -130,7 +109,10 @@ void Quest::processInput(char input)
     }
     else if (input == ESC)
     {
-        Redis::get() << "input 27 action quest-quit";
+        Redis::get() << "input 27 "          // Input key
+                     << "action quest-quit " // Input action
+                     << "quest-end quit "    // Quest end reason
+                     << "quest-hp " << hp;   // HP when quest ended
         Redis::get().push();
         context_->transitionTo(new Menu);
         return;
@@ -146,15 +128,18 @@ void Quest::processInput(char input)
             if (hp_add)
                 add = hp_add_amount;
             hp += add - diff;
-            Redis::get() << "hp " << hp << " gain " << add << " loose " << diff;
+            Redis::get() << "hp " << hp << " "
+                         << "gain " << add << " "
+                         << "loose " << diff;
             Redis::get().push();
         }
 
         if (isEnd())
         {
-            if (hp < 0)
+            if (hp <= 0)
             {
-                Redis::get() << "quest-lost no-hp";
+                Redis::get() << "quest-end no-hp " // Quest end reason
+                             << "quest-hp " << hp; // HP when quest ended
                 Redis::get().push();
                 context_->transitionTo(new Defeat);
             }
@@ -162,13 +147,16 @@ void Quest::processInput(char input)
             // returned, and quest +1 != quest, it is in fact lost.
             else if (grid.getCell(0, 9).value_or(quest + 1) == quest)
             {
-                Redis::get() << "quest-won 1";
+                Redis::get() << "quest-end victory " // Quest end reason
+                             << "quest-hp " << hp;   // HP when quest ended
                 Redis::get().push();
                 context_->transitionTo(new Victory);
             }
             else
             {
-                Redis::get() << "quest-lost no-match";
+                Redis::get() << "quest-end no-match "    // Quest end reason
+                             << "quest-hp " << hp << " " // HP when quest ended
+                             << "quest-result " << grid.getCell(0, 9).value();
                 Redis::get().push();
                 context_->transitionTo(new Defeat);
             }

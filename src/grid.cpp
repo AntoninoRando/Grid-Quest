@@ -62,6 +62,31 @@ optional<int> Grid::getCell(int x, int y)
     return grid[y][x];
 }
 
+void Grid::setCell(int x, int y, int value)
+{
+    if (x < 0 || x > 9 || y < 0 || y > 9)
+        return;
+    grid[y][x] = value;
+}
+
+std::string Grid::toString() const
+{
+    std::stringstream ss;
+    for (int row = 9; row >= 0; row--)
+    {
+        for (int col = 0; col < 10; col++)
+        {
+            optional<int> cell = grid[row][col];
+            if (cell.has_value())
+                ss << cell.value() << ".";
+            else
+                return ss.str();
+        }
+        ss << "."; // Last cell added a dot, so we add another to make two dots.
+    }
+    return ss.str();
+}
+
 std::tuple<int, int, int, int> Grid::modCursor(int xS, int yS, int xE, int yE) const
 {
     int xM = 0;
