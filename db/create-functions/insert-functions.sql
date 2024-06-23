@@ -235,7 +235,7 @@ BEGIN
     IF already_exists THEN
         RAISE NOTICE 
             'Quest of player % at % already exists',
-            pplayer, quest_ts;
+            pplayer, TO_TIMESTAMP(quest_time / 1000);
         RETURN FALSE;
     END IF;
     

@@ -315,9 +315,9 @@ Category *DefaultProfile()
 {
     Category *pinfo = new Category("Profile");
     pinfo->add(new ProfileInfo("Nickname", "Main"));
-    pinfo->add(new ProfileInfo("Game Played", "0"));
-    pinfo->add(new ProfileInfo("Game Won", "0"));
-    pinfo->add(new ProfileInfo("Game Lost", "0"));
+    pinfo->add(new ProfileInfo("Quest Played", "0"));
+    pinfo->add(new ProfileInfo("Quest Won", "0"));
+    pinfo->add(new ProfileInfo("Quest Lost", "0"));
     pinfo->add(new ProfileInfo("Win Rate", "0%"));
     pinfo->add(new DeleteProfile("Delete Profile"));
     return pinfo;

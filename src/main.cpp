@@ -72,6 +72,49 @@ int main()
         addUserWork.commit();
     }
 
+    pqxx::work fetchInfo(sqlConn);
+    try
+    {
+        std::stringstream ss;
+
+        pqxx::result pR = fetchInfo.exec("SELECT * FROM quest_played('" + nickname + "')");
+        pqxx::result wR = fetchInfo.exec("SELECT * FROM quest_won('" + nickname + "')");
+        int p = pR[0][0].as<int>();
+        int w = wR[0][0].as<int>();
+
+        ss << "Quest Played = " << p;
+        GlobalSettings::profileInfo->Change(ss.str());
+        ss.str("");
+        ss << "Quest Won = " << w;
+        GlobalSettings::profileInfo->Change(ss.str());
+        ss.str("");
+        ss << "Quest Lost = " << p - w;
+        GlobalSettings::profileInfo->Change(ss.str());
+        ss.str("");
+        ss << "Win Rate = " << w / p;
+        GlobalSettings::profileInfo->Change(ss.str());
+
+        fetchInfo.commit();
+    }
+    catch (const pqxx::sql_error &e)
+    {
+        fetchInfo.abort();
+        std::cout << "An error occurred!"
+                  << "We couldn't fetch your profile information.\n\n"
+                  << "Try re-open the app.";
+        _getch();
+        return 1;
+    }
+    catch (const std::exception &e)
+    {
+        fetchInfo.abort();
+        std::cout << "An error occurred!"
+                  << "We couldn't fetch your profile information.\n\n"
+                  << "Try re-open the app.";
+        _getch();
+        return 1;
+    }
+
     std::cout << "\u001b[" + BG_COL + "m";
 
     Context game;
