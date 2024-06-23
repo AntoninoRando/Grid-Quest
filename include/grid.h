@@ -75,6 +75,26 @@ public:
      * to get. If the cell is empty, so the optional will be.
      */
     std::optional<int> getCell(int x, int y);
+
+    /**
+     * @brief Put a value into the cell at coordinates (x, y).
+     * 
+     * @param x The x coordinate of the cell to set (i.e., its column).
+     * @param y The y coordinate of the cell to set (i.e., its row).
+     * @param value The value to put inside the cell.
+     */
+    void setCell(int x, int y, int value);
+
+    /**
+     * @brief Return a string representation of the grid.
+     * 
+     * The representation of the grid lists every cell, left-to-right and 
+     * bottom-to-top, with a dot "." between each cell and two dots ".." between
+     * each row.
+     * 
+     * @return std::string The string representation of the grid.
+     */
+    std::string toString() const;
 };
 
 #endif
