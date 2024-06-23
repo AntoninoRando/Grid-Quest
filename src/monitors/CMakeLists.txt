@@ -11,6 +11,7 @@ target_link_libraries(inputs PRIVATE pqxx)
 add_executable(stats
     analyzeStats.cpp
     ../monitors.cpp
+    questAnalyze.cpp
 )
 
 target_include_directories(stats PRIVATE "${PROJECT_SOURCE_DIR}/include")
@@ -21,6 +22,7 @@ target_link_libraries(stats PRIVATE pqxx)
 add_executable(times
     loadTimes.cpp
     ../monitors.cpp
+    sessionTrack.cpp
 )
 
 target_include_directories(times PRIVATE "${PROJECT_SOURCE_DIR}/include")

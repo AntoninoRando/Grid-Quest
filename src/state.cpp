@@ -5,6 +5,8 @@
 #include <iostream>
 #include <optional>
 #include <chrono>
+#include "monitors/sessionTrack.cpp"
+#include "monitors/questAnalyze.cpp"
 
 void State::setup() { clearConsole(); }
 
@@ -48,6 +50,14 @@ void Defeat::show() const { std::cout << "You lost!\nPress any key to continue..
 void Defeat::processInput(char input) { context_->transitionTo(new Menu); }
 
 bool Quest::isEnd() { return grid.contRemaining() == 1 || hp <= 0; }
+
+void updateDB()
+{
+    SessionTracker *st = new SessionTracker("postgresql://postgres:postgres@localhost/gridquest");
+    QuestAnalyze *qa = new QuestAnalyze("postgresql://postgres:postgres@localhost/gridquest");
+    StreamParser::runMonitors({st, qa});
+    GlobalSettings::loadProfile();
+}
 
 Quest::Quest()
 {
@@ -114,6 +124,7 @@ void Quest::processInput(char input)
                      << "quest-end quit "    // Quest end reason
                      << "quest-hp " << hp;   // HP when quest ended
         Redis::get().push();
+        updateDB();
         context_->transitionTo(new Menu);
         return;
     }
@@ -141,6 +152,7 @@ void Quest::processInput(char input)
                 Redis::get() << "quest-end no-hp " // Quest end reason
                              << "quest-hp " << hp; // HP when quest ended
                 Redis::get().push();
+                updateDB();
                 context_->transitionTo(new Defeat);
             }
             // If the optional is empty, the grid is lost. Since quest + 1 is
@@ -150,6 +162,7 @@ void Quest::processInput(char input)
                 Redis::get() << "quest-end victory " // Quest end reason
                              << "quest-hp " << hp;   // HP when quest ended
                 Redis::get().push();
+                updateDB();
                 context_->transitionTo(new Victory);
             }
             else
@@ -158,6 +171,7 @@ void Quest::processInput(char input)
                              << "quest-hp " << hp << " " // HP when quest ended
                              << "quest-result " << grid.getCell(0, 9).value();
                 Redis::get().push();
+                updateDB();
                 context_->transitionTo(new Defeat);
             }
         }

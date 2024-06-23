@@ -7,6 +7,8 @@ add_executable(${PROJECT_NAME}
     utils.cpp
     menu.cpp
     monitors.cpp
+    monitors/sessionTrack.cpp
+    monitors/questAnalyze.cpp
     resource.rc
 )
 
