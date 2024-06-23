@@ -2,18 +2,18 @@ BEGIN TRANSACTION;
 
 -- REMOVE PREVIOUS TABLES AND DOMAINS
 
-DROP SCHEMA public CASCADE;
+DROP   SCHEMA public CASCADE;
 CREATE SCHEMA public;
 
 -- DOMAINS
 
-CREATE DOMAIN cell_cord       AS INTEGER      CHECK (VALUE >= 0 AND VALUE <= 9);
-CREATE DOMAIN s_str           AS VARCHAR(20)  CHECK (VALUE <> '');
-CREATE DOMAIN m_str           AS VARCHAR(100) CHECK (VALUE <> '');
-CREATE TYPE   cells_operation AS ENUM('Add', 'Sub', 'Mul', 'Div', 'Mod', 'Concat');
-CREATE TYPE   scene_type      AS ENUM('Menu', 'Settings', 'Quest', 'Victory', 'Defeat');
-CREATE TYPE   cell            AS (value INTEGER, x cell_cord, y cell_cord);
-CREATE DOMAIN grid            AS VARCHAR(318) CHECK (VALUE ~ '^(\.{0,2}\d+)+$');
+CREATE DOMAIN cell_cord  AS INTEGER      CHECK (VALUE >= 0 AND VALUE <= 9);
+CREATE DOMAIN s_str      AS VARCHAR(20)  CHECK (VALUE <> '');
+CREATE DOMAIN m_str      AS VARCHAR(100) CHECK (VALUE <> '');
+CREATE TYPE   cells_op   AS ENUM('Add', 'Sub', 'Mul', 'Div', 'Mod', 'Concat');
+CREATE TYPE   scene_type AS ENUM('Menu', 'Settings', 'Quest', 'Victory', 'Defeat');
+CREATE TYPE   cell       AS (value INTEGER, x cell_cord, y cell_cord);
+CREATE DOMAIN grid       AS VARCHAR(318); -- CHECK (VALUE ~ '^(\.{0,2}\d+)+$');
 -- ^       = start of the string;
 -- \.{0,2} = between 0 and 2 dots: "", ".", or "..";
 -- \d+     = any number of digits;
@@ -35,64 +35,63 @@ CREATE DOMAIN grid            AS VARCHAR(318) CHECK (VALUE ~ '^(\.{0,2}\d+)+$');
 -- A user profile in which they saves their progress.
 CREATE TABLE Profile (
     -- PRIMARY KEY attributes
-	nickname m_str PRIMARY KEY,
+	nickname      m_str      PRIMARY KEY,
 
     -- Other attributes
-	creation TIMESTAMP  NOT NULL
+	creation      TIMESTAMP  NOT NULL
 );
 
 -- A gaming session of a player (i.e., from when they opened the game to when
 -- they closed it).
 CREATE TABLE Session (
     -- PRIMARY KEY attributes
-    id         SERIAL    PRIMARY KEY,
+    id            SERIAL     PRIMARY KEY,
     
     -- Other attributes
-    player     m_str     NOT NULL,
-	startstamp TIMESTAMP NOT NULL,
+    player        m_str      NOT NULL,
+	startstamp    TIMESTAMP  NOT NULL,
 
     -- CONSTRAINTS
     UNIQUE (player, startstamp),
 	FOREIGN KEY (player) REFERENCES Profile(nickname) ON DELETE CASCADE
 );
 
--- A game scene and its wait times to load.
+-- A game scene and its load time. It includes the Quest scene type.
 CREATE TABLE Scene (
     -- PRIMARY KEY attributes
-    player_session INTEGER,
-    ord            INTEGER,
-    PRIMARY KEY (player_session, ord),
+    session       INTEGER,
+    ord           INTEGER,
+    PRIMARY KEY (session, ord),
 
     -- Other attributes
-    type_name      scene_type NOT NULL,
-    time_in        INTERVAL   NOT NULL,
-    max_wait       REAL       NOT NULL,
-    avg_wait       REAL       NOT NULL,
+    type_name     scene_type NOT NULL,
+    startstamp    TIMESTAMP  NOT NULL,
+    endstamp      TIMESTAMP  NOT NULL,
+    max_wait      REAL       NOT NULL,
+    avg_wait      REAL       NOT NULL,
 
     -- CONSTRAINTS
-	FOREIGN KEY (player_session) REFERENCES session(id) ON DELETE CASCADE,
+	FOREIGN KEY (session) REFERENCES Session(id) ON DELETE CASCADE,
     CONSTRAINT non_negative_ord CHECK (ord >= 0)
 );
 
--- A single quest played by the user.
 CREATE TABLE Quest (
-    -- PRIMARY KEY attributes
-    id                 SERIAL    PRIMARY KEY,
-
-    -- Other attributes
-	session_player     m_str,
-    session_startstamp TIMESTAMP,
-	result             INTEGER,
-    goal               INTEGER   NOT NULL,
-    startstamp         TIMESTAMP NOT NULL,
-    endstamp           TIMESTAMP NOT NULL,
-    hp                 INTEGER   NOT NULL,
-    grid               grid      NOT NULL,
-
-    -- CONSTRAINTS
-    FOREIGN KEY (session_player, session_startstamp) REFERENCES Session(player, startstamp),
-    UNIQUE (session_player, session_startstamp, startstamp),
-    CONSTRAINT start_before_end CHECK (startstamp < endstamp)
+	-- PRIMARY KEY attributes
+	id            SERIAL     PRIMARY KEY,
+	
+	-- Other KEY
+	scene_session INTEGER    NOT NULL,
+	scene_ord     INTEGER    NOT NULL,
+	UNIQUE (scene_session, scene_ord),
+	
+	-- Other attributes
+	grid          grid       NOT NULL,
+    goal          INTEGER    NOT NULL,
+    hp            INTEGER    NOT NULL,
+	result        INTEGER,
+	
+	-- CONSTRAINTS
+	FOREIGN KEY (scene_session, scene_ord) REFERENCES Scene(session, ord)
 );
 
 -- An operation on two cells of a grid.
@@ -103,9 +102,9 @@ CREATE TABLE Operation (
     PRIMARY KEY (quest, ord),
 
     -- Other attributes
-	op_type        cells_operation NOT NULL, 
-	primary_cell   cell            NOT NULL,
-    secondary_cell cell            NOT NULL,
+	op_type        cells_op NOT NULL, 
+	primary_cell   cell     NOT NULL,
+    secondary_cell cell     NOT NULL,
 
     -- CONSTRAINTS
     FOREIGN KEY (quest) REFERENCES Quest(id),

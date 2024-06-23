@@ -13,21 +13,19 @@ object Session {
 }
 
 object Scene {
-    <u>ord: int > 0</u>
-    name: scene
-    time_in: interval
-    max_wait: real
-    avg_wait: real
+    <u>ord:   int > 0</u>
+    name:        scene
+    startstamp:  timestamp
+    endstamp:    timestamp
+    max_wait:    real
+    avg_wait:    real
 }
 
 object Quest {
-    <u>id: int > 0</u>
+    grid: str
     goal: int
-    start: timestamp
-    end: timestamp
     result: int 0..1
     hp: int
-    grid: str
 }
 
 object Operation {
@@ -41,9 +39,9 @@ object Operation {
 
 Profile "0..*" -- "1..1" Session : plays
 
-Session "0..*" -- "1..1" Quest : has
+Session "1..*" -- "<u>1..1</u>" Scene : has
 
-Session "1..*" -- "<u>1..1</u>" Scene : takes
+Scene "0..1" -- "<u>1..1</u>" Quest : is
 
 Quest "0..*" -left- "<u>1..1</u>" Operation : performs
 
