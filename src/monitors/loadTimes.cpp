@@ -1,11 +1,7 @@
 #include "monitors.h"
 #include <iostream>
 #include <conio.h>
-#include <cassert>
 #include <string.h>
-#include <optional>
-#include <map>
-#include <list>
 #include <pqxx/pqxx>
 #include <format>
 
@@ -37,7 +33,7 @@ public:
         query_ << "SELECT add_user('"
                << player_ << "', "
                << addTime_ << ")";
-        std::string query = prettyPrintQuery();
+        string query = prettyPrintQuery();
 
         try
         {
@@ -87,7 +83,7 @@ public:
         query_ << "SELECT add_game_session('"
                << player_ << "', "
                << addTime_ << ")";
-        std::string query = prettyPrintQuery();
+        string query = prettyPrintQuery();
 
         try
         {
@@ -151,10 +147,11 @@ public:
                << session_ << ", "
                << ord_ << ", "
                << "'" << sceneName_ << "', "
-               << endTime_ << " - " << startTime_ << ", "
+               << startTime_ << ", "
+               << endTime_ << ", "
                << maxWait_ << ", "
                << avgWait_ << ")";
-        std::string query = prettyPrintQuery();
+        string query = prettyPrintQuery();
 
         try
         {

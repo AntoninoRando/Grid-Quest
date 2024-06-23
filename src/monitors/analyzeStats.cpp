@@ -1,53 +1,133 @@
 #include "monitors.h"
 #include <iostream>
 #include <conio.h>
-#include <cassert>
 #include <string.h>
-#include <map>
+#include <optional>
 
-int parseStream(redisReply *r, std::map<std::string, int> &gameInfos)
+using std::string;
+
+// Below we define the MonitorState classes that implement the state-transaction
+// function for the monitor `QuestAnalyze`.
+
+class AddQuest : public MonitorState
 {
-    switch (r->type)
+    string player_;
+    string questStartTime_;
+    int questOrd_;
+    string grid_;
+    string goal_;
+    string hp_;
+    std::optional<string> result_;
+
+public:
+    AddQuest(string player,
+             string questStartTime,
+             int questOrd,
+             string grid, string goal,
+             string hp,
+             std::optional<string> result = {})
     {
-    case REDIS_REPLY_STRING:
-        std::cout << "(string) " << r->str;
-        if (strcmp(r->str, "quest-quit") == 0)
-            gameInfos["quest-quit"]++;
-        else if (strcmp(r->str, "quest-won") == 0)
-            gameInfos["quest-won"]++;
-        else if (strcmp(r->str, "no-hp") == 0)
-            gameInfos["quest-lost-no-hp"]++;
-        else if (strcmp(r->str, "no-match") == 0)
-            gameInfos["quest-lost-no-match"]++;
-        break;
-    case REDIS_REPLY_STATUS:
-        std::cout << "(status) " << r->str;
-        break;
-    case REDIS_REPLY_INTEGER:
-        std::cout << "(integer) " << r->integer;
-        break;
-    case REDIS_REPLY_NIL:
-        std::cout << "(nill)";
-        break;
-    case REDIS_REPLY_ERROR:
-        std::cout << "(error) " << r->str;
-        break;
-    case REDIS_REPLY_ARRAY:
-        for (size_t i = 0; i < r->elements; i++)
-        {
-            auto el = r->element[i];
-            int error = parseStream(el, gameInfos);
-            if (error == -1)
-                return -1;
-        }
-        break;
-    default:
-        std::cout << "(unknown-type) " << r->type;
-        return -1;
+        player_ = player;
+        questStartTime_ = questStartTime;
+        questOrd_ = questOrd;
+        grid_ = grid;
+        goal_ = goal;
+        hp_ = hp;
+        result_ = result;
     }
-    std::cout << "\n";
-    return 0;
-}
+
+    bool execCommitQueries(pqxx::work transaction) override
+    {
+        query_ << "SELECT add_quest("
+               << "'" << player_ << "', "
+               << questStartTime_ << ", "
+               << questOrd_ << ", "
+               << "'" << grid_ << "', "
+               << goal_ << ", "
+               << hp_;
+        if (result_.has_value())
+            query_ << ", " << result_.value();
+        query_ << ")";
+
+        string query = prettyPrintQuery();
+
+        try
+        {
+            pqxx::result res = transaction.exec(query);
+            std::cout << "\033[32m(RESULT)\033[0m " << res[0][0].as<bool>() << "\n";
+            transaction.commit();
+            return true;
+        }
+        catch (const pqxx::sql_error &e)
+        {
+            std::cerr << "\033[91m(RESULT)\033[0m " << e.what() << '\n';
+            transaction.abort();
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << "Error: " << e.what() << '\n';
+            transaction.abort();
+        }
+
+        return false;
+    }
+};
+
+// The monitor
+
+/**
+ * @brief A monitor that tracks the users that play the game and when they play.
+ *
+ * This monitor is used to track:
+ * - New users;
+ * - Users playing sessions;
+ * - Game scenes in which users spend their time during the playing sessions;
+ * - Time users spent waiting for a game scene to load.
+ *
+ * This monitor uses 3 states to perform its job: AddUser, AddSession, AddScene.
+ */
+class QuestAnalyze : public Monitor
+{
+    string player_;
+    string questStartTime_;
+    int questOrd_;
+    string grid_;
+    string goal_;
+    string hp_;
+    std::optional<string> result_;
+
+public:
+    using Monitor::Monitor; // Inherit constructor.
+
+    void stateTransition(const string id, const string key, const string value) override
+    {
+        // id is written in the form: "epoch-serialId", where epoch is the time
+        // the entry was written in the stream and serialId is a serial number
+        // that Redis uses to differentiate entries written in the same epoch.
+        // We are only interest in epoch.
+        string entryTime = id.substr(0, id.find("-"));
+
+        if (key == "game-start")
+            questOrd_ = 0;
+        else if (key == "use-nickname")
+            player_ = value;
+        else if (key == "enter-state" && value == "Quest")
+            questStartTime_ = entryTime;
+        else if (key == "quest-grid")
+            grid_ = value;
+        else if (key == "quest-goal")
+            goal_ = value;
+        else if (key == "quest-result")
+            result_ = value;
+        else if (key == "quest-hp") // If we have quest-hp, we know it ended.
+        {
+            hp_ = value;
+            setState(new AddQuest(player_, questStartTime_, questOrd_, grid_, goal_, hp_, result_));
+            executeStateQuery();
+            questOrd_++;
+        }
+    }
+};
 
 int main()
 {
@@ -59,24 +139,7 @@ int main()
         return 1;
     }
 
-    std::map<std::string, int> gameInfos;
-
-    auto *reply = (redisReply *)Redis::get().run("XRANGE gridquest - +");
-    assert(parseStream(reply, gameInfos) != -1 && "Unexpected reply type.");
-
-    int count = gameInfos["quest-quit"] + gameInfos["quest-won"] + gameInfos["quest-lost-no-hp"] + gameInfos["quest-lost-no-match"];
-
-    std::stringstream command;
-    command << "INCRBY quest-played " << count;
-    Redis::get().run(command.str().c_str());
-
-    std::map<std::string, int>::iterator itr;
-    for (itr = gameInfos.begin(); itr != gameInfos.end(); ++itr)
-    {
-        command.str("");
-        command << "INCRBY " << itr->first << " " << itr->second;
-        Redis::get().run(command.str().c_str());
-    }
-    std::cout << "Process completed | Counted " << count << " games" << std::endl;
-    return 0;
+    QuestAnalyze *monitor = new QuestAnalyze("postgresql://postgres:postgres@localhost/gridquest");
+    StreamParser::runMonitors({monitor});
+    std::cout << "\n\nProcess Completed!\n";
 }
