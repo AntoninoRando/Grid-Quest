@@ -82,8 +82,17 @@ void StreamParser::runMonitors_(
     }
 }
 
-void StreamParser::runMonitors(std::vector<Monitor *> monitors)
+void StreamParser::runMonitors(std::vector<Monitor *> monitors, int trimStream)
 {
-    auto *reply = (redisReply *)Redis::get().run("XRANGE gridquest - +");
-    runMonitors_(reply, monitors);
+    if (monitors.size() > 0)
+    {
+        auto *reply = (redisReply *)Redis::get().run("XRANGE gridquest - +");
+        runMonitors_(reply, monitors);
+    }
+    if (trimStream >= 0)
+    {
+        std::stringstream ss;
+        ss << "XTRIM gridquest MAXLEN " << trimStream;
+        Redis::get().run(ss.str().c_str());
+    }
 }

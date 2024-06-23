@@ -88,4 +88,8 @@ int main()
         char input = _getch();
         game.processInput(input);
     }
+
+    // We trim the stream at the end of the code to ensure that the stream is
+    // trimmed at a point that won't affect the Monitors.
+    StreamParser::runMonitors({}, 0);
 }

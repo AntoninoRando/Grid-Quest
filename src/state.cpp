@@ -38,6 +38,11 @@ void Bye::setup()
     std::cout << "Bye!";
     Redis::get() << "game-end 1";
     Redis::get().push();
+
+    // We trim the stream at the end of the code to ensure that the stream is
+    // trimmed at a point that won't affect the Monitors.
+    StreamParser::runMonitors({}, 0);
+
     exit(0); //@TODO: replace this with a more elegant solution
 }
 
