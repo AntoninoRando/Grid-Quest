@@ -54,13 +54,13 @@ public:
         try
         {
             pqxx::result res = transaction.exec(query);
-            std::cout << "\033[32m(RESULT)\033[0m " << res[0][0].as<bool>() << "\n";
+            prettyPrintResult(res[0][0].as<bool>());
             transaction.commit();
             return true;
         }
         catch (const pqxx::sql_error &e)
         {
-            std::cerr << "\033[91m(RESULT)\033[0m " << e.what() << '\n';
+            prettyPrintResult(e.what(), true);
             transaction.abort();
         }
         catch (const std::exception &e)

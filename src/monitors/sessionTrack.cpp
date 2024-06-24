@@ -37,14 +37,13 @@ public:
         try
         {
             pqxx::result res = transaction.exec(query);
-            bool userAdded = res[0][0].as<bool>();
-            std::cout << "\033[32m(RESULT)\033[0m " << userAdded << "\n";
+            prettyPrintResult(res[0][0].as<bool>());
             transaction.commit();
             return true;
         }
         catch (const pqxx::sql_error &e)
         {
-            std::cerr << "\033[91m(RESULT)\033[0m " << e.what() << '\n';
+            prettyPrintResult(e.what(), true);
             transaction.abort();
         }
         catch (const std::exception &e)
@@ -88,14 +87,14 @@ public:
         {
             pqxx::result res = transaction.exec(query);
             int queryReturn = res[0][0].as<int>();
-            std::cout << "\033[32m(RESULT)\033[0m " << queryReturn << "\n";
+            prettyPrintResult(queryReturn);
             id_ = queryReturn;
             transaction.commit();
             return true;
         }
         catch (const pqxx::sql_error &e)
         {
-            std::cerr << "\033[91m(RESULT)\033[0m " << e.what() << '\n';
+            prettyPrintResult(e.what(), true);
             transaction.abort();
         }
         catch (const std::exception &e)
@@ -155,13 +154,13 @@ public:
         try
         {
             pqxx::result res = transaction.exec(query);
-            std::cout << "\033[32m(RESULT)\033[0m " << res[0][0].as<bool>() << "\n";
+            prettyPrintResult(res[0][0].as<bool>());
             transaction.commit();
             return true;
         }
         catch (const pqxx::sql_error &e)
         {
-            std::cerr << "\033[91m(RESULT)\033[0m " << e.what() << '\n';
+            prettyPrintResult(e.what(), true);
             transaction.abort();
         }
         catch (const std::exception &e)

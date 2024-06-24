@@ -4,6 +4,7 @@
 #include <hiredis.h>
 #include <string>
 #include <sstream>
+#include <iostream>
 #include <pqxx/pqxx>
 
 #define STREAM_NAME "gridquest"
@@ -60,6 +61,7 @@ class MonitorState
 protected:
     Monitor *monitor_;
     std::stringstream query_;
+    bool printQuery_ = true;
 
 public:
     void setMonitor(Monitor *monitor) { monitor_ = monitor_; }
@@ -75,7 +77,18 @@ public:
      * @return false If the SQL query encountered an error.
      */
     virtual bool execCommitQueries(pqxx::work transaction) = 0;
+
+    void disablePrint() { printQuery_ = false; }
+
     std::string prettyPrintQuery();
+
+    template <typename T>
+    void prettyPrintResult(T result, bool isError = false)
+    {
+        if (!printQuery_)
+            return;
+        std::cout << "\033[" << (isError ? "91m" : "32m") << "(RESULT)\033[0m " << result << '\n';
+    }
 };
 
 /**
@@ -97,12 +110,18 @@ class Monitor
 
 protected:
     pqxx::connection *connection_;
+    bool printQuery_ = true;
 
 public:
     Monitor(const char *db_url) { connect(db_url); }
-
+    void disablePrint() { printQuery_ = false; }
     MonitorState *state() { return state_; }
-    void setState(MonitorState *state) { state_ = state; }
+    void setState(MonitorState *state)
+    {
+        state_ = state;
+        if (!printQuery_)
+            state_->disablePrint();
+    }
     void connect(const char *db_url) { connection_ = new pqxx::connection(db_url); }
 
     /**

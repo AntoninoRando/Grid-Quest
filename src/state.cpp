@@ -59,7 +59,9 @@ bool Quest::isEnd() { return grid.contRemaining() == 1 || hp <= 0; }
 void updateDB()
 {
     SessionTracker *st = new SessionTracker("postgresql://postgres:postgres@localhost/gridquest");
+    st->disablePrint();
     QuestAnalyze *qa = new QuestAnalyze("postgresql://postgres:postgres@localhost/gridquest");
+    qa->disablePrint();
     StreamParser::runMonitors({st, qa});
     GlobalSettings::loadProfile();
 }

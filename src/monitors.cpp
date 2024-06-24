@@ -39,6 +39,9 @@ void *Redis::push()
 
 std::string MonitorState::prettyPrintQuery()
 {
+    if (!printQuery_)
+        return query_.str();
+
     std::string query = query_.str();
     std::cout << "\033[93mSQL executing >>> \033[94m" << query << "\033[0m\n";
     return query;
