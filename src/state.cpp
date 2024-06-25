@@ -73,9 +73,11 @@ Quest::Quest()
     user.setType(CursorType());
 
     int fillAmount = 18 + (rand() % 8); // i.e., from 18 to 25
+    // int fillAmount = 2;
     grid.fill(fillAmount);
     srand(time(nullptr));
     quest = rand() % 100 + 1;
+    // quest = grid.getCell(0, 9).value() + grid.getCell(1, 9).value();
     Redis::get() << "quest-start 1 "
                  << "quest-grid " << grid.toString() << " "
                  << "quest-goal " << quest;
@@ -128,8 +130,8 @@ void Quest::processInput(char input)
     {
         Redis::get() << "input 27 "          // Input key
                      << "action quest-quit " // Input action
-                     << "quest-end quit "    // Quest end reason
-                     << "quest-hp " << hp;   // HP when quest ended
+                     << "quest-hp " << hp << " "   // HP when quest ended
+                     << "quest-end quit";    // Quest end reason
         Redis::get().push();
         updateDB();
         context_->transitionTo(new Menu);
@@ -156,8 +158,8 @@ void Quest::processInput(char input)
         {
             if (hp <= 0)
             {
-                Redis::get() << "quest-end no-hp " // Quest end reason
-                             << "quest-hp " << hp; // HP when quest ended
+                Redis::get() << "quest-hp " << hp << " "
+                             << "quest-end no-hp";
                 Redis::get().push();
                 updateDB();
                 context_->transitionTo(new Defeat);
@@ -166,17 +168,18 @@ void Quest::processInput(char input)
             // returned, and quest +1 != quest, it is in fact lost.
             else if (grid.getCell(0, 9).value_or(quest + 1) == quest)
             {
-                Redis::get() << "quest-end victory " // Quest end reason
-                             << "quest-hp " << hp;   // HP when quest ended
+                Redis::get() << "quest-result " << grid.getCell(0, 9).value() << " "
+                             << "quest-hp " << hp << " "
+                             << "quest-end victory";
                 Redis::get().push();
                 updateDB();
                 context_->transitionTo(new Victory);
             }
             else
             {
-                Redis::get() << "quest-end no-match "    // Quest end reason
-                             << "quest-hp " << hp << " " // HP when quest ended
-                             << "quest-result " << grid.getCell(0, 9).value();
+                Redis::get() << "quest-result " << grid.getCell(0, 9).value() << " "
+                             << "quest-hp " << hp << " "
+                             << "quest-end no-match";
                 Redis::get().push();
                 updateDB();
                 context_->transitionTo(new Defeat);

@@ -120,8 +120,9 @@ public:
         else if (key == "quest-result")
             result_ = value;
         else if (key == "quest-hp") // If we have quest-hp, we know it ended.
-        {
             hp_ = value;
+        else if (key == "quest-end")
+        {
             setState(new AddQuest(player_, questStartTime_, questOrd_, grid_, goal_, hp_, result_));
             executeStateQuery();
             questOrd_++;
