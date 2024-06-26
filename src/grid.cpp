@@ -29,33 +29,9 @@ void Grid::adjustHole(int x, int y)
     }
 }
 
-int Grid::contRemaining() const
-{
-    int count = 0;
-    int strikes = 0;
+int Grid::contRemaining() const { return lefts_; }
 
-    for (int row = 9; row >= 0; row--)
-    {
-        if (strikes == 2)
-            break;
-
-        for (int col = 0; col < 10; col++)
-        {
-            if (grid[row][col].has_value())
-            {
-                count += 1;
-                strikes = 0;
-                continue;
-            }
-
-            strikes++;
-            break;
-        }
-    }
-    return count;
-}
-
-optional<int> Grid::getCell(int x, int y)
+optional<int> Grid::getCell(int x, int y) const
 {
     if (x < 0 || x > 9 || y < 0 || y > 9)
         return optional<int>{};
@@ -66,7 +42,9 @@ void Grid::setCell(int x, int y, int value)
 {
     if (x < 0 || x > 9 || y < 0 || y > 9)
         return;
-    grid[y][x] = value;
+    if (!grid[y][x].has_value())
+        lefts_++;
+    grid[y][x] = std::clamp(value, -999, 999);
 }
 
 std::string Grid::toString() const
@@ -115,11 +93,14 @@ void Grid::show(int xS, int yS, int xE, int yE) const
 
     clearConsole();
 
+    int spaces = 0;
+
     for (int row = 0; row < 10; row++)
     {
         for (int col = 0; col < 10; col++)
         {
             std::string color;
+
             if (row == yS && col == xS)
                 color = PCELL_COL;
             else if (row == yE && col == xE)
@@ -133,16 +114,37 @@ void Grid::show(int xS, int yS, int xE, int yE) const
             if (cell.has_value())
             {
                 cout << "\u001b[" + color + "m";
-                cout << std::string(2, ' ');
+                if (cell.value() >= 0)
+                {
+                    if (cell.value() <= 9)
+                        spaces = 3;
+                    else if (cell.value() <= 99)
+                        spaces = 2;
+                    else
+                        spaces = 1;
+                }
+                else
+                {
+                    if (cell.value() >= -9)
+                        spaces = 3;
+                    else if (cell.value() >= -99)
+                        spaces = 2;
+                    else
+                        spaces = 1;
+                }
+
+                cout << std::string(spaces, ' ');
                 cout << cell.value();
-                cout << std::string(2, ' ');
+                cout << " ";
             }
             else
             {
-                int tot = lPadding + cellSize + rPadding;
-                cout << std::string(5, ' ');
+                if ((row == yS && col == xS) || (row == yE && col == xE))
+                    cout << "   \033[31mX" << COL_RESET << " ";
+                else
+                    cout << "     ";
             }
-            cout << "\u001b[0m\u001b[" + BG_COL + "m";
+            cout << COL_RESET;
         }
         cout << '\n';
     }
@@ -150,6 +152,7 @@ void Grid::show(int xS, int yS, int xE, int yE) const
 
 void Grid::fill(int amount)
 {
+    lefts_ = 0;
     srand(time(nullptr)); // Random seed based on the current time
 
     int row = 9;
@@ -157,6 +160,7 @@ void Grid::fill(int amount)
     while (amount > 0 && row >= 0)
     {
         grid[row][col] = optional<int>{rand() % 9};
+        lefts_++;
         amount -= 1;
 
         col = (col + 1) % 10;
@@ -190,22 +194,26 @@ optional<int> Grid::applyInput(char input, int xS, int yS, int xE, int yE)
     if (input == ADD)
     {
         action = "add";
-        grid[yS][xS] = v1.value() + v2.value();
+        grid[yS][xS] = std::clamp(v1.value() + v2.value(), -999, 999);
+        lefts_--;
     }
     else if (input == SUB)
     {
         action = "subtract";
-        grid[yS][xS] = v1.value() - v2.value();
+        grid[yS][xS] = std::clamp(v1.value() - v2.value(), -999, 999);
+        lefts_--;
     }
     else if (input == MUL)
     {
         action = "multiply";
-        grid[yS][xS] = v1.value() * v2.value();
+        grid[yS][xS] = std::clamp(v1.value() * v2.value(), -999, 999);
+        lefts_--;
     }
     else if (input == MOD)
     {
         action = "module";
-        grid[yS][xS] = v1.value() % v2.value();
+        grid[yS][xS] = std::clamp(v1.value() % v2.value(), -999, 999);
+        lefts_--;
     }
     else if (input == DIV)
     {
@@ -216,7 +224,8 @@ optional<int> Grid::applyInput(char input, int xS, int yS, int xE, int yE)
             Redis::get().push();
             return optional<int>{};
         }
-        grid[yS][xS] = v1.value() / v2.value();
+        grid[yS][xS] = std::clamp(v1.value() / v2.value(), -999, 999);
+        lefts_--;
     }
     else if (input == MRG)
     {
@@ -225,7 +234,8 @@ optional<int> Grid::applyInput(char input, int xS, int yS, int xE, int yE)
         zeros = 10;
         while (zeros < abs(v2.value()))
             zeros *= 10;
-        grid[yS][xS] = sign * (abs(v1.value()) * zeros + abs(v2.value()));
+        grid[yS][xS] = std::clamp(sign * (abs(v1.value()) * zeros + abs(v2.value())), -999, 999);
+        lefts_--;
     }
     else
     {

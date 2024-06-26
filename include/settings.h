@@ -64,6 +64,7 @@
  * @brief The decoration for the background.
  */
 #define BG_COL GlobalSettings::getDecoration("Background")
+#define COL_RESET "\033[0m\033[" + BG_COL + "m"
 /**
  * @brief The decoration for the primary cell of the grid cursor.
  */

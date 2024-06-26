@@ -59,8 +59,8 @@ bool Quest::isEnd() { return grid.contRemaining() == 1 || hp <= 0; }
 void updateDB()
 {
     SessionTracker *st = new SessionTracker("postgresql://postgres:postgres@localhost/gridquest");
-    st->disablePrint();
     QuestAnalyze *qa = new QuestAnalyze("postgresql://postgres:postgres@localhost/gridquest");
+    st->disablePrint();
     qa->disablePrint();
     StreamParser::runMonitors({st, qa});
     GlobalSettings::loadProfile();
@@ -86,9 +86,13 @@ Quest::Quest()
 
 void Quest::show() const
 {
+    int v1 = grid.getCell(user.xS(), user.yS()).value_or(0);
+    int v2 = grid.getCell(user.xE(), user.yE()).value_or(0);
+    int nextHp = hp - abs(v1 - v2) + (!hp_add ? hp_add_amount : 0);
+    std::string col = (nextHp >= hp) ? "\033[32m" : "\033[31m";
     grid.show(user.xS(), user.yS(), user.xE(), user.yE());
-    std::cout << "\n\nQUEST: " << quest
-              << "\t|\tHP: " << hp
+    std::cout << "\n\n QUEST: " << quest
+              << "\t|\tHP: " << hp << " -> " << col << nextHp << COL_RESET
               << "\t|\tREMAINING: " << grid.contRemaining();
 }
 
@@ -128,10 +132,10 @@ void Quest::processInput(char input)
     }
     else if (input == ESC)
     {
-        Redis::get() << "input 27 "          // Input key
-                     << "action quest-quit " // Input action
-                     << "quest-hp " << hp << " "   // HP when quest ended
-                     << "quest-end quit";    // Quest end reason
+        Redis::get() << "input 27 "              // Input key
+                     << "action quest-quit "     // Input action
+                     << "quest-hp " << hp << " " // HP when quest ended
+                     << "quest-end quit";        // Quest end reason
         Redis::get().push();
         updateDB();
         context_->transitionTo(new Menu);

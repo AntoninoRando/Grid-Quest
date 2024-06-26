@@ -6,13 +6,15 @@
 
 /**
  * @brief The grid of numbers the player have to reduce to a single number that
- * matches the quest in order to win.
+ * matches the quest in order to win. Each number can only has a value between
+ * -999 to 999.
  */
 class Grid
 {
     int lPadding = 2;
     int rPadding = 2;
     int cellSize = 1;
+    int lefts_ = 0;
 
     /**
      * @brief The actual grid of number as a 10x10 matrix of integers.
@@ -74,7 +76,7 @@ public:
      * @return std::optional<int> An optional describing the value of the cell
      * to get. If the cell is empty, so the optional will be.
      */
-    std::optional<int> getCell(int x, int y);
+    std::optional<int> getCell(int x, int y) const;
 
     /**
      * @brief Put a value into the cell at coordinates (x, y).

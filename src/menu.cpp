@@ -8,7 +8,7 @@ void Menu::highlightOption(int option) const
     setCursorPosition(1, option + 2); // 2 is the offset of the first option
     std::cout << "   " << "\u001b[" + SEL_COL + "m" << " "
               << options[option]
-              << " " << "\u001b[0m\u001b[" + BG_COL + "m";
+              << " " << COL_RESET;
 }
 
 void Menu::resetOption(int option)
@@ -81,7 +81,7 @@ void Settings::show() const
     std::cout << "\u001b[" + BG_COL + (!selected ? ";2" : "") + "m";
     for (auto c : settings[currentSection])
         std::cout << c->GetName() << ": " << c->GetValue() << "\n";
-    std::cout << "\u001b[0m\u001b[" + BG_COL + "m";
+    std::cout << COL_RESET;
 
     if (selectedSetting.has_value())
         highlightSetting(currentSetting, *selectedSetting.value());
@@ -148,12 +148,12 @@ void Settings::highlightSection(int section) const
     setCursorPosition(sectionsCursorOffset[section], 1);
     std::cout << "\u001b[" + SEL_COL + "m"
               << sections[section]->GetName()
-              << "\u001b[0m\u001b[" + BG_COL + "m";
+              << COL_RESET;
 }
 void Settings::highlightSetting(int ord, Setting *setting) const
 {
     setCursorPosition(0, ord + 3);
     std::cout << "\u001b[" + SEL_COL + "m";
     std::cout << setting->GetName() + ": " + setting->GetValue();
-    std::cout << "\u001b[0m\u001b[" + BG_COL + "m";
+    std::cout << COL_RESET;
 }
