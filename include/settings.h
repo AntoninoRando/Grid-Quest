@@ -395,7 +395,7 @@ public:
      * to configure the game settings.
      */
     static void load();
-    
+
     static int loadProfile();
 };
 

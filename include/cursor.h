@@ -84,7 +84,7 @@ public:
     void rotateLeft();
 
     /**
-     * @brief Rotate the cursro clockwise.
+     * @brief Rotate the cursor clockwise.
      */
     void rotateRight();
 };

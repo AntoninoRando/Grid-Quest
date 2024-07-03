@@ -86,14 +86,30 @@ Quest::Quest()
 
 void Quest::show() const
 {
-    int v1 = grid.getCell(user.xS(), user.yS()).value_or(0);
-    int v2 = grid.getCell(user.xE(), user.yE()).value_or(0);
-    int nextHp = hp - abs(v1 - v2) + (!hp_add ? hp_add_amount : 0);
-    std::string col = (nextHp >= hp) ? "\033[32m" : "\033[31m";
+    auto hpString = std::to_string(hp);
+    auto v1 = grid.getCell(user.xS(), user.yS());
+    auto v2 = grid.getCell(user.xE(), user.yE());
+
+    int currentHPLength = 0;
+
+    if (v1.has_value() && v2.has_value())
+    {
+        int nextHp = hp - abs(v1.value() - v2.value()) + (!hp_add ? hp_add_amount : 0);
+        hpString.append(" -> ");
+        hpString.append((nextHp >= hp) ? "\033[32m" : "\033[31m");
+        hpString.append(std::to_string(nextHp));
+        currentHPLength = -5; // Removing the length of the unicode "\033..."
+    }
+
+    int maxHPLength = 9;
+    int currentHpLength = currentHPLength + hpString.length();
+    int padding = std::max(maxHPLength - currentHpLength, 0);
+
     grid.show(user.xS(), user.yS(), user.xE(), user.yE());
-    std::cout << "\n\n QUEST: " << quest
-              << "\t|\tHP: " << hp << " -> " << col << nextHp << COL_RESET
-              << "\t|\tREMAINING: " << grid.contRemaining();
+    std::cout << "\n\n"
+              << "  QUEST: " << quest << (quest >= 10 ? " " : "")
+              << "  |  HP: " << hpString << COL_RESET << std::string(padding, ' ')
+              << "  |  REMAINING: " << grid.contRemaining();
 }
 
 void Quest::processInput(char input)

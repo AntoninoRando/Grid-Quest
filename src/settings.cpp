@@ -379,7 +379,7 @@ int GlobalSettings::loadProfile()
         ss << "Quest Lost = " << p - w;
         GlobalSettings::profileInfo->Change(ss.str());
         ss.str("");
-        ss << "Win Rate = " << w / p;
+        ss << "Win Rate = " << (int)(w * 100 / p) << "%";
         GlobalSettings::profileInfo->Change(ss.str());
 
         fetchInfo.commit();
