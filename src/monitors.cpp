@@ -22,6 +22,12 @@ void *Redis::run(const char *format, ...)
     return lastReply;
 }
 
+void *Redis::runNoFree(const char *format, ...)
+{
+    auto reply = redisCommand(context, format);
+    return reply;
+}
+
 void *Redis::putInStream(std::string command)
 {
     std::string s("XADD ");
@@ -89,7 +95,7 @@ void StreamParser::runMonitors(std::vector<Monitor *> monitors, int trimStream)
 {
     if (monitors.size() > 0)
     {
-        auto *reply = (redisReply *)Redis::get().run("XRANGE gridquest - +");
+        redisReply *reply = (redisReply *)Redis::get().run("XRANGE gridquest - +");
         runMonitors_(reply, monitors);
     }
     if (trimStream >= 0)

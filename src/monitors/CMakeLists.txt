@@ -1,31 +1,32 @@
-add_executable(inputs
-    trackInputs.cpp
+add_executable(inputsObserver
+    inputsObserver.cpp
     ../monitors.cpp
+    inputsObserve.cpp
 )
 
-target_include_directories(inputs PRIVATE "${PROJECT_SOURCE_DIR}/include")
-target_link_libraries(inputs PRIVATE hiredis)
-target_link_libraries(inputs PRIVATE PostgreSQL::PostgreSQL)
-target_link_libraries(inputs PRIVATE pqxx)
+target_include_directories(inputsObserver PRIVATE "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(inputsObserver PRIVATE hiredis)
+target_link_libraries(inputsObserver PRIVATE PostgreSQL::PostgreSQL)
+target_link_libraries(inputsObserver PRIVATE pqxx)
 
-add_executable(stats
-    analyzeStats.cpp
+add_executable(questAnalyzer
+    questAnalyzer.cpp
     ../monitors.cpp
     questAnalyze.cpp
 )
 
-target_include_directories(stats PRIVATE "${PROJECT_SOURCE_DIR}/include")
-target_link_libraries(stats PRIVATE hiredis)
-target_link_libraries(stats PRIVATE PostgreSQL::PostgreSQL)
-target_link_libraries(stats PRIVATE pqxx)
+target_include_directories(questAnalyzer PRIVATE "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(questAnalyzer PRIVATE hiredis)
+target_link_libraries(questAnalyzer PRIVATE PostgreSQL::PostgreSQL)
+target_link_libraries(questAnalyzer PRIVATE pqxx)
 
-add_executable(times
-    loadTimes.cpp
+add_executable(sessionTracker
+    sessionTracker.cpp
     ../monitors.cpp
     sessionTrack.cpp
 )
 
-target_include_directories(times PRIVATE "${PROJECT_SOURCE_DIR}/include")
-target_link_libraries(times PRIVATE hiredis)
-target_link_libraries(times PRIVATE PostgreSQL::PostgreSQL)
-target_link_libraries(times PRIVATE pqxx)
+target_include_directories(sessionTracker PRIVATE "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(sessionTracker PRIVATE hiredis)
+target_link_libraries(sessionTracker PRIVATE PostgreSQL::PostgreSQL)
+target_link_libraries(sessionTracker PRIVATE pqxx)

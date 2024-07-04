@@ -39,6 +39,7 @@ public:
     redisContext *context;
     bool connect(const char *ip, int port);
     void *run(const char *format, ...);
+    void *runNoFree(const char *format, ...);
     void *putInStream(std::string command);
     void *push();
 
