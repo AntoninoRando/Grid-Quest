@@ -192,6 +192,7 @@ class SessionTracker : public Monitor
     int sessionId_;
     int sceneOrd_;
     AddScene *scene_ = nullptr;
+    string lastEntryTime_;
 
 public:
     using Monitor::Monitor; // Inherit constructor.
@@ -202,20 +203,20 @@ public:
         // the entry was written in the stream and serialId is a serial number
         // that Redis uses to differentiate entries written in the same epoch.
         // We are only interest in epoch.
-        string entryTime = id.substr(0, id.find("-"));
+        lastEntryTime_ = id.substr(0, id.find("-"));
 
         if (key == "use-nickname")
         {
             // Commit last scene if it exists.
             if (scene_ != nullptr)
             {
-                scene_->addEndTime(entryTime);
+                scene_->addEndTime(lastEntryTime_);
                 executeStateQuery();
                 scene_ = nullptr;
             }
 
             player_ = value;
-            setState(new AddUser(player_, entryTime));
+            setState(new AddUser(player_, lastEntryTime_));
             executeStateQuery();
         }
         else if (key == "game-start")
@@ -223,12 +224,12 @@ public:
             // Commit last scene if it exists.
             if (scene_ != nullptr)
             {
-                scene_->addEndTime(entryTime);
+                scene_->addEndTime(lastEntryTime_);
                 executeStateQuery();
                 scene_ = nullptr;
             }
 
-            AddSession *as = new AddSession(player_, entryTime);
+            AddSession *as = new AddSession(player_, lastEntryTime_);
             setState(as);
             executeStateQuery();
             sessionId_ = as->id();
@@ -239,11 +240,11 @@ public:
             // Commit last scene if it exists.
             if (scene_ != nullptr)
             {
-                scene_->addEndTime(entryTime);
+                scene_->addEndTime(lastEntryTime_);
                 executeStateQuery();
             }
 
-            scene_ = new AddScene(sessionId_, value, entryTime, sceneOrd_);
+            scene_ = new AddScene(sessionId_, value, lastEntryTime_, sceneOrd_);
             setState(scene_);
             sceneOrd_++; // Increase ord for next scene.
         }
@@ -255,7 +256,18 @@ public:
         }
         else if (scene_ != nullptr && key == "game-end")
         {
-            scene_->addEndTime(entryTime);
+            scene_->addEndTime(lastEntryTime_);
+            executeStateQuery();
+            scene_ = nullptr;
+        }
+    }
+
+    void stateTransitionEnd() override
+    {
+        // Commit last scene if it exists.
+        if (scene_ != nullptr)
+        {
+            scene_->addEndTime(lastEntryTime_);
             executeStateQuery();
             scene_ = nullptr;
         }

@@ -152,6 +152,14 @@ public:
      * @param value The value of the Redis stream entry.
      */
     virtual void stateTransition(const std::string id, const std::string key, const std::string value) = 0;
+
+    /**
+     * @brief Implement the last step for the `stateTransition` method, i.e. the
+     * action to take when the stream parsing ends.
+     *
+     * If not overridden, this method does nothing.
+     */
+    virtual void stateTransitionEnd() {};
 };
 
 /**

@@ -97,6 +97,8 @@ void StreamParser::runMonitors(std::vector<Monitor *> monitors, int trimStream)
     {
         redisReply *reply = (redisReply *)Redis::get().run("XRANGE gridquest - +");
         runMonitors_(reply, monitors);
+        for (auto monitor : monitors)
+            monitor->stateTransitionEnd();
     }
     if (trimStream >= 0)
     {

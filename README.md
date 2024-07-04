@@ -294,3 +294,7 @@ A complete analysis of the software requires many testers that can play the game
 ## Looking Forward
 
 This project is still a working progress. Many aspects has been designed yet not fully implemented, thus something here could be incomplete. However, everything required by the assignment should be there.
+
+### To Do List
+
+- Build the project so that the shared libraries are static (i.e., embedded into th executable) or add an installer that installs them.
