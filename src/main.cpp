@@ -45,7 +45,12 @@ int main()
         return 1;
     }
 
-    GlobalSettings::load();
+    Redis::get(LOG_STREAM) << "message Game-start author player result 0";
+    Redis::get(LOG_STREAM).push();
+
+    int error = GlobalSettings::load();
+    Redis::get(LOG_STREAM) << "message Load-settings author player result " << error;
+    Redis::get(LOG_STREAM).push();
 
     pqxx::connection sqlConn("postgresql://postgres:postgres@localhost/gridquest");
     pqxx::work fetchProfile(sqlConn);

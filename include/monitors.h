@@ -7,7 +7,7 @@
 #include <iostream>
 #include <pqxx/pqxx>
 
-#define STREAM_NAME "gridquest"
+#define LOG_STREAM "gridquest:logs"
 
 // Singleton: https://stackoverflow.com/questions/1008019/how-do-you-implement-the-singleton-design-pattern?answertab=scoredesc#tab-top
 
@@ -23,15 +23,17 @@ class Redis
      * @brief The current command to send to the Redis stream.
      */
     std::ostringstream streamCommand_;
+    std::string currentStream_;
 
 public:
     Redis(Redis const &) = delete;
     void operator=(Redis const &) = delete;
 
-    static Redis &get()
+    static Redis &get(std::string stream = "gridquest")
     {
         static Redis instance; // Guaranteed to be destroyed.
                                // Instantiated on first use.
+        instance.currentStream_ = stream;
         return instance;
     }
 

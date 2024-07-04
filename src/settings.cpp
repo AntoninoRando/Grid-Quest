@@ -334,8 +334,8 @@ int parseSettings(Category *settings, std::string filePath)
     while (getline(settingsFile, line))
     {
         std::string error = settings->Change(line);
-        if (error.length() > 0 && error[0] == 'E')
-            throw std::invalid_argument(error);
+        if (error.length() > 0)
+            return 1; // throw std::invalid_argument(error);
     }
     settingsFile.close();
     return 0;
@@ -345,13 +345,13 @@ Category *GlobalSettings::controls;
 Category *GlobalSettings::graphic;
 Category *GlobalSettings::profileInfo;
 
-void GlobalSettings::load()
+int GlobalSettings::load()
 {
     GlobalSettings::controls = DefaultControls();
     GlobalSettings::graphic = DefaultGraphic();
     GlobalSettings::profileInfo = DefaultProfile();
-    parseSettings(GlobalSettings::controls, "etc/savedSettings/controls.txt");
-    parseSettings(GlobalSettings::graphic, "etc/savedSettings/graphic.txt");
+    int error = parseSettings(GlobalSettings::controls, "etc/savedSettings/controls.txt");
+    return (error == 1) ? error : parseSettings(GlobalSettings::graphic, "etc/savedSettings/graphic.txt");
 }
 
 int GlobalSettings::loadProfile()

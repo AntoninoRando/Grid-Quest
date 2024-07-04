@@ -393,8 +393,10 @@ public:
     /**
      * @brief Read and parse the file containing the saved user setting in order
      * to configure the game settings.
+     * 
+     * @return int 1 if an error occurred, 0 otherwise.
      */
-    static void load();
+    static int load();
 
     static int loadProfile();
 };

@@ -31,7 +31,7 @@ void *Redis::runNoFree(const char *format, ...)
 void *Redis::putInStream(std::string command)
 {
     std::string s("XADD ");
-    s.append(STREAM_NAME).append(" * ").append(command);
+    s.append(currentStream_).append(" * ").append(command);
     return run(s.c_str());
 }
 
