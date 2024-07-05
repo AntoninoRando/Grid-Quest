@@ -13,10 +13,7 @@ void addNewUser(std::string nickname, pqxx::work *addUserWork)
 
     while (true)
     {
-        Redis::get(LOG_STREAM) << "message Ask-user-a-nickname "
-                               << "author player "
-                               << "result 0 ";
-        Redis::get(LOG_STREAM).push();
+        Redis::get().log("Ask-user-a-nickname", CLIENT, OK);
 
         std::cout << "Enter a nickname: ";
         std::getline(std::cin, nickname);
@@ -25,11 +22,7 @@ void addNewUser(std::string nickname, pqxx::work *addUserWork)
         error = GlobalSettings::profileInfo->Change("Nickname = " + nickname);
         if (error.length() > 0)
         {
-            Redis::get(LOG_STREAM) << "message Invalid-user-nickname-prompted "
-                                   << "author player "
-                                   << "result 1 "
-                                   << "details " << error;
-            Redis::get(LOG_STREAM).push();
+            Redis::get().log("Invalid-user-nickname-prompted", CLIENT, BAD, error);
             std::cout << error << "\n";
         }
         else
@@ -38,12 +31,8 @@ void addNewUser(std::string nickname, pqxx::work *addUserWork)
             bool added = result[0][0].as<bool>();
             if (!added)
             {
-                Redis::get(LOG_STREAM) << "message Invalid-user-nickname-prompted "
-                                       << "author player "
-                                       << "result 1 "
-                                       << "details " << "Nickname-already-in-use";
-                Redis::get(LOG_STREAM).push();
-                std::cout << "E: Nickname-already-in-use.\n";
+                Redis::get().log("Invalid-user-nickname-prompted", CLIENT, BAD, "Nickname-already-in-use");
+                std::cout << "This nickname is already in use. Please choose a different one.\n";
             }
             else
                 return;
@@ -63,16 +52,13 @@ int main()
         return 1;
     }
 
-    Redis::get(LOG_STREAM) << "message Game-start author player result 0";
-    Redis::get(LOG_STREAM).push();
+    Redis::get().log("Game-start", CLIENT, OK);
 
     std::string error = GlobalSettings::load();
-    Redis::get(LOG_STREAM) << "message Load-settings author player ";
     if (error.length() > 0)
-        Redis::get(LOG_STREAM) << "result 1 details " << error;
+        Redis::get().log("Load-settings", CLIENT, BAD, error);
     else
-        Redis::get(LOG_STREAM) << "result 0";
-    Redis::get(LOG_STREAM).push();
+        Redis::get().log("Load-settings", CLIENT, OK);
 
     pqxx::connection sqlConn("postgresql://postgres:postgres@localhost/gridquest");
     pqxx::work fetchProfile(sqlConn);
@@ -81,29 +67,15 @@ int main()
     {
         pqxx::result fetchResult = fetchProfile.exec("SELECT * FROM last_profile_to_play()");
         nickname = fetchResult[0][0].as<std::string>();
-        Redis::get(LOG_STREAM) << "message Load-profile-nickname "
-                               << "author player "
-                               << "result 0 "
-                               << "details Profile-found";
-        Redis::get(LOG_STREAM).push();
+        Redis::get().log("Load-profile-nickname", CLIENT, OK, "Profile-found");
 
         std::string errorMessage = GlobalSettings::profileInfo->Change("Nickname = " + nickname);
-        Redis::get(LOG_STREAM) << "message Change-initial-nickname author player result ";
-        if (errorMessage.length() > 0)
-            Redis::get(LOG_STREAM) << "1 details " << errorMessage;
-        else
-            Redis::get(LOG_STREAM) << "0";
-        Redis::get(LOG_STREAM).push();
+        Redis::get().log("Change-initial-nickname", CLIENT, errorMessage.length() > 0 ? BAD : OK, errorMessage);
         fetchProfile.commit();
     }
     catch (const pqxx::sql_error &e)
     {
-        Redis::get(LOG_STREAM) << "message Load-profile-nickname "
-                               << "author player "
-                               << "result 0 "
-                               << "details No-profile-found";
-        Redis::get(LOG_STREAM).push();
-
+        Redis::get().log("Load-profile-nickname", CLIENT, OK, "No-profile-found");
         fetchProfile.abort();
         pqxx::work addUserWork(sqlConn);
         addNewUser(nickname, &addUserWork);
@@ -111,12 +83,7 @@ int main()
     }
     catch (const std::exception &e)
     {
-        Redis::get(LOG_STREAM) << "message Load-profile-nickname "
-                               << "author player "
-                               << "result 0 "
-                               << "details No-profile-found";
-        Redis::get(LOG_STREAM).push();
-
+        Redis::get().log("Load-profile-nickname", CLIENT, OK, "No-profile-found");
         fetchProfile.abort();
         pqxx::work addUserWork(sqlConn);
         addNewUser(nickname, &addUserWork);
@@ -130,13 +97,17 @@ int main()
     Context game;
     game.transitionTo(new Opening);
 
-    // Serve per visualizzare i caratteri speciali su console, e.g. i colori.
+    // Need this call to display special characters on console, e.g. colors.
     system("chcp 65001");
 
     while (true)
     {
         game.show();
+        Redis::get().log("Show-game-scene", CLIENT, OK);
+
         char input = _getch();
+        Redis::get().log("Receive-player-input", CLIENT, OK);
+
         game.processInput(input);
     }
 

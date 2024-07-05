@@ -43,6 +43,16 @@ void *Redis::push()
     return result;
 }
 
+void Redis::log(std::string message, LOG_AUTHOR author, LOG_RESULT result, std::string details)
+{
+    Redis::get(LOG_STREAM) << "message " << message << " "
+                           << "author " << author << " "
+                           << "result " << result << " ";
+    if (details.length() > 0)
+        Redis::get(LOG_STREAM) << "details " << details;
+    Redis::get(LOG_STREAM).push();
+}
+
 std::string MonitorState::prettyPrintQuery()
 {
     if (!printQuery_)

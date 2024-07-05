@@ -9,6 +9,18 @@
 
 #define LOG_STREAM "gridquest:logs"
 
+enum LOG_AUTHOR
+{
+    CLIENT,
+    SERVER
+};
+
+enum LOG_RESULT
+{
+    OK,
+    BAD
+};
+
 // Singleton: https://stackoverflow.com/questions/1008019/how-do-you-implement-the-singleton-design-pattern?answertab=scoredesc#tab-top
 
 /**
@@ -44,6 +56,24 @@ public:
     void *runNoFree(const char *format, ...);
     void *putInStream(std::string command);
     void *push();
+
+    /**
+     * @brief Insert a log message in the Redis stream dedicated to logs.
+     *
+     * Calling this method is equivalent to running the following command in the
+     * Redis CLI:
+     *
+     * XADD LOGS_STREAM * message <message> author <author> result <result> [details <details>]
+     *
+     * where the LOGS_STREAM is the default stream name for logs.
+     *
+     * @param message The message describing what happened.
+     * @param author The origin of the message (e.g., the client).
+     * @param result 0 if no error occurred, 1 if an error occurred.
+     * @param details Additional details about the message (e.g., the error
+     * message if an error occurred).
+     */
+    void log(std::string message, LOG_AUTHOR author, LOG_RESULT result, std::string details = "");
 
     // Overload the << operator for various types
     template <typename T>

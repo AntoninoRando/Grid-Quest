@@ -373,10 +373,7 @@ int GlobalSettings::loadProfile()
         int p = pR[0][0].as<int>();
         int w = wR[0][0].as<int>();
 
-        Redis::get(LOG_STREAM) << "message Fetch-profile-info "
-                               << "author player "
-                               << "result 0";
-        Redis::get(LOG_STREAM).push();
+        Redis::get().log("Fetch-profile-info", CLIENT, OK);
 
         ss << "Quest Played = " << p;
         GlobalSettings::profileInfo->Change(ss.str());
@@ -395,10 +392,7 @@ int GlobalSettings::loadProfile()
     catch (const pqxx::sql_error &e)
     {
         fetchInfo.abort();
-        Redis::get(LOG_STREAM) << "message Fetch-profile-info "
-                               << "author player "
-                               << "result 1";
-        Redis::get(LOG_STREAM).push();
+        Redis::get().log("Fetch-profile-info", CLIENT, BAD);
         std::cout << "An error occurred!"
                   << "We couldn't fetch your profile information.\n\n"
                   << "Try re-open the app.";
@@ -408,10 +402,7 @@ int GlobalSettings::loadProfile()
     catch (const std::exception &e)
     {
         fetchInfo.abort();
-        Redis::get(LOG_STREAM) << "message Fetch-profile-info "
-                               << "author player "
-                               << "result 1";
-        Redis::get(LOG_STREAM).push();
+        Redis::get().log("Fetch-profile-info", CLIENT, BAD);
         std::cout << "An error occurred!"
                   << "We couldn't fetch your profile information.\n\n"
                   << "Try re-open the app.";
