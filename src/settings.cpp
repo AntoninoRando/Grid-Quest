@@ -50,7 +50,7 @@ std::string KeyBind::Change(std::string key)
     {
         Redis::get() << "error " << error;
         Redis::get().push();
-        return "E: " + error;
+        return error;
     }
 
     value_ = key[0];
@@ -120,7 +120,7 @@ std::string Decoration::Change(std::string newValue)
     {
         Redis::get() << "error " << error;
         Redis::get().push();
-        return "E: " + error;
+        return error;
     }
 
     value_ = newValue;
@@ -150,12 +150,12 @@ std::string ProfileInfo::validate(std::string newValue)
 
     int newValueSize = newValue.size();
     if (newValueSize == 0 || newValueSize > 100)
-        return "E: Nickname-must-be-between-1-and-100-characters-long";
+        return "Nickname-must-be-between-1-and-100-characters-long";
 
     for (auto c : newValue)
     {
         if (!std::isalnum(c) && c != '_')
-            return "E: Nickname-must-contain-only-alphanumeric-characters";
+            return "Nickname-must-contain-only-alphanumeric-characters";
     }
 
     return "";
@@ -171,7 +171,7 @@ std::string ProfileInfo::Change(std::string newValue)
 
     std::string error = validate(newValue);
     if (error.length() > 0)
-        return "E: " + error;
+        return error;
 
     Redis::get() << "use-nickname " << newValue;
     Redis::get().push();
@@ -179,7 +179,7 @@ std::string ProfileInfo::Change(std::string newValue)
     return "";
 }
 
-std::string ProfileInfo::ChangeWithInput() { return "E: Access-denied"; }
+std::string ProfileInfo::ChangeWithInput() { return "Cannot-modify"; }
 
 std::string ProfileInfo::ToString() const { return name_ + ": " + value_; }
 
@@ -217,7 +217,7 @@ std::string DeleteProfile::Change(std::string _)
         delProfile.abort();
     }
 
-    return "E: Could-not-delete-profile";
+    return "Could-not-delete-profile";
 }
 
 std::string Button::ToString() const { return name_; }
@@ -226,20 +226,20 @@ std::string Category::Change(std::string newOption)
 {
     size_t i = newOption.find('=');
     if (i == std::string::npos)
-        return "E: newOption does not have an = character!";
+        return "newOption-does-not-have-a-=-character";
 
     std::string settingName = newOption.substr(0, i);
     std::string value = newOption.substr(i + 1);
 
     if (settingName.empty())
-        return "E: newOption does not contain the setting!";
+        return "newOption-does-not-contain-the-setting";
     if (value.empty())
-        return "E: newOption does not contain a value!";
+        return "newOption-does-not-contain-a-value";
 
     std::optional<Setting *> setting = findSetting(trim(settingName));
 
     if (!setting.has_value())
-        return "E: this category hasn't the desired setting!";
+        return "this-category-has-not-the-desired-setting";
 
     std::string changeResult = setting.value()->Change(ltrim(value));
     return changeResult;
@@ -432,7 +432,7 @@ char GlobalSettings::getKey(std::string keyName)
         key = operations->GetChildren()[keyName];
     if (!key)
     {
-        std::string error = "Received a non-existing key name: " + keyName;
+        std::string error = "Received-a-non-existing-key-name:" + keyName;
         throw std::invalid_argument(error);
     }
     return key->GetValue()[0];
@@ -443,7 +443,7 @@ std::string GlobalSettings::getDecoration(std::string decName)
     Setting *decoration = GlobalSettings::graphic->GetChildren()[decName];
     if (!decoration)
     {
-        std::string error = "Received a non-existing decoration name: " + decName;
+        std::string error = "Received-a-non-existing-decoration-name:" + decName;
         throw std::invalid_argument(error);
     }
     return decoration->GetValue();

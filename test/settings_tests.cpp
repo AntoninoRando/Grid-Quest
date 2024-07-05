@@ -87,7 +87,7 @@ TEST(DecorationChange, OKFormats)
 TEST(NicknameChange, EmptyNick)
 {
     ProfileInfo pinfo("Nickname", "test");
-    EXPECT_EQ("E: Nickname-must-be-between-1-and-100-characters-long", pinfo.validate(""));
+    EXPECT_EQ("Nickname-must-be-between-1-and-100-characters-long", pinfo.validate(""));
 }
 
 TEST(NicknameChange, TooLongNick)
@@ -95,7 +95,7 @@ TEST(NicknameChange, TooLongNick)
     ProfileInfo pinfo("Nickname", "test");
     for (int i = 101; i < 200; i++)
     {
-        EXPECT_EQ("E: Nickname-must-be-between-1-and-100-characters-long", pinfo.validate(std::string(i, 'a')));
+        EXPECT_EQ("Nickname-must-be-between-1-and-100-characters-long", pinfo.validate(std::string(i, 'a')));
     }
 }
 
@@ -104,7 +104,7 @@ TEST(NicknameChange, WhiteSpaces)
     ProfileInfo pinfo("Nickname", "test");
     for (auto c : {" ", "  ", "   ", "a ", " a", "a b", "\t", "\n", "\b", "\v", "\r"})
     {
-        EXPECT_EQ("E: Nickname-must-contain-only-alphanumeric-characters", pinfo.validate(c));
+        EXPECT_EQ("Nickname-must-contain-only-alphanumeric-characters", pinfo.validate(c));
     }
 }
 
@@ -114,7 +114,7 @@ TEST(NicknameChange, UnicodeWhiteSpaces)
     ProfileInfo pinfo("Nickname", "test");
     for (auto c : {"\u0020", "\u00A0", "\u1680", "\u2000", "\u2001", "\u2002", "\u2003", "\u2004", "\u2005", "\u2006", "\u2007", "\u2008", "\u2009", "\u200A", "\u202F", "\u205F", "\u3000"})
     {
-        EXPECT_EQ("E: Nickname-must-contain-only-alphanumeric-characters", pinfo.validate(c));
+        EXPECT_EQ("Nickname-must-contain-only-alphanumeric-characters", pinfo.validate(c));
     }
 }
 

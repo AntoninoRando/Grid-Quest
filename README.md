@@ -269,9 +269,9 @@ We summarize what we've just said by listing the monitors we used to implement t
 
     The monitor checks the users stats to determine whether the game is indeed hard for new-user, and fairly challenging for experienced users.
 
-2. **The game shall run smooth**
+2. **The game shall run smooth with no problems**
 
-    The monitor checks the time required to complete the main operations and determines whether the system is updating too slow.
+    The monitor checks the time required to complete the main operations and determines whether the system is updating too slow. Moreover, another monitor checks if errors occurred during the execution of some functions.
 
 3. **The game shall run as long as desired**
 
@@ -298,3 +298,4 @@ This project is still a working progress. Many aspects has been designed yet not
 ### To Do List
 
 - Build the project so that the shared libraries are static (i.e., embedded into th executable) or add an installer that installs them.
+- Make settings changes preserve when game is closed.
