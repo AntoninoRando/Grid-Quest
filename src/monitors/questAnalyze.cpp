@@ -75,17 +75,6 @@ public:
 
 // The monitor
 
-/**
- * @brief A monitor that tracks the users that play the game and when they play.
- *
- * This monitor is used to track:
- * - New users;
- * - Users playing sessions;
- * - Game scenes in which users spend their time during the playing sessions;
- * - Time users spent waiting for a game scene to load.
- *
- * This monitor uses 3 states to perform its job: AddUser, AddSession, AddScene.
- */
 class QuestAnalyze : public Monitor
 {
     string player_;

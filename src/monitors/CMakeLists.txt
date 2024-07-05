@@ -9,6 +9,8 @@ target_link_libraries(inputsObserver PRIVATE hiredis)
 target_link_libraries(inputsObserver PRIVATE PostgreSQL::PostgreSQL)
 target_link_libraries(inputsObserver PRIVATE pqxx)
 
+# ------------------------------------------------------------------------------
+
 add_executable(questAnalyzer
     questAnalyzer.cpp
     ../monitors.cpp
@@ -20,6 +22,8 @@ target_link_libraries(questAnalyzer PRIVATE hiredis)
 target_link_libraries(questAnalyzer PRIVATE PostgreSQL::PostgreSQL)
 target_link_libraries(questAnalyzer PRIVATE pqxx)
 
+# ------------------------------------------------------------------------------
+
 add_executable(sessionTracker
     sessionTracker.cpp
     ../monitors.cpp
@@ -30,3 +34,16 @@ target_include_directories(sessionTracker PRIVATE "${PROJECT_SOURCE_DIR}/include
 target_link_libraries(sessionTracker PRIVATE hiredis)
 target_link_libraries(sessionTracker PRIVATE PostgreSQL::PostgreSQL)
 target_link_libraries(sessionTracker PRIVATE pqxx)
+
+# ------------------------------------------------------------------------------
+
+add_executable(anomalyDetector
+    anomalyDetector.cpp
+    ../monitors.cpp
+    anomalyDetect.cpp
+)
+
+target_include_directories(anomalyDetector PRIVATE "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(anomalyDetector PRIVATE hiredis)
+target_link_libraries(anomalyDetector PRIVATE PostgreSQL::PostgreSQL)
+target_link_libraries(anomalyDetector PRIVATE pqxx)

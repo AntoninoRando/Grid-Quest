@@ -176,7 +176,9 @@ class StreamParser
                              std::optional<const char *> entryId = {});
 
 public:
-    static void runMonitors(std::vector<Monitor *> monitors, int trimStream = -1);
+    static void runMonitors(std::vector<Monitor *> monitors,
+                            int trimStream = -1,
+                            std::string streamName = "gridquest");
 };
 
 #endif

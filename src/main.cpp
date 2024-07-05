@@ -13,20 +13,38 @@ void addNewUser(std::string nickname, pqxx::work *addUserWork)
 
     while (true)
     {
+        Redis::get(LOG_STREAM) << "message Ask-user-a-nickname "
+                               << "author player "
+                               << "result 0 ";
+        Redis::get(LOG_STREAM).push();
+
         std::cout << "Enter a nickname: ";
         std::getline(std::cin, nickname);
         std::cout << "\n";
 
         error = GlobalSettings::profileInfo->Change("Nickname = " + nickname);
-
         if (error.length() > 0)
+        {
+            Redis::get(LOG_STREAM) << "message Invalid-user-nickname-prompted "
+                                   << "author player "
+                                   << "result 1 "
+                                   << "details " << error;
+            Redis::get(LOG_STREAM).push();
             std::cout << error << "\n";
+        }
         else
         {
             pqxx::result result = addUserWork->exec("SELECT add_user('" + nickname + "', CURRENT_DATE)");
             bool added = result[0][0].as<bool>();
             if (!added)
+            {
+                Redis::get(LOG_STREAM) << "message Invalid-user-nickname-prompted "
+                                       << "author player "
+                                       << "result 1 "
+                                       << "details " << "Nickname-already-in-use";
+                Redis::get(LOG_STREAM).push();
                 std::cout << "E: Nickname-already-in-use.\n";
+            }
             else
                 return;
         }
@@ -48,8 +66,12 @@ int main()
     Redis::get(LOG_STREAM) << "message Game-start author player result 0";
     Redis::get(LOG_STREAM).push();
 
-    int error = GlobalSettings::load();
-    Redis::get(LOG_STREAM) << "message Load-settings author player result " << error;
+    std::string error = GlobalSettings::load();
+    Redis::get(LOG_STREAM) << "message Load-settings author player ";
+    if (error.length() > 0)
+        Redis::get(LOG_STREAM) << "result 1 details " << error;
+    else
+        Redis::get(LOG_STREAM) << "result 0";
     Redis::get(LOG_STREAM).push();
 
     pqxx::connection sqlConn("postgresql://postgres:postgres@localhost/gridquest");
@@ -59,11 +81,29 @@ int main()
     {
         pqxx::result fetchResult = fetchProfile.exec("SELECT * FROM last_profile_to_play()");
         nickname = fetchResult[0][0].as<std::string>();
-        GlobalSettings::profileInfo->Change("Nickname = " + nickname);
+        Redis::get(LOG_STREAM) << "message Load-profile-nickname "
+                               << "author player "
+                               << "result 0 "
+                               << "details Profile-found";
+        Redis::get(LOG_STREAM).push();
+
+        std::string errorMessage = GlobalSettings::profileInfo->Change("Nickname = " + nickname);
+        Redis::get(LOG_STREAM) << "message Change-initial-nickname author player result ";
+        if (errorMessage.length() > 0)
+            Redis::get(LOG_STREAM) << "1 details " << errorMessage;
+        else
+            Redis::get(LOG_STREAM) << "0";
+        Redis::get(LOG_STREAM).push();
         fetchProfile.commit();
     }
     catch (const pqxx::sql_error &e)
     {
+        Redis::get(LOG_STREAM) << "message Load-profile-nickname "
+                               << "author player "
+                               << "result 0 "
+                               << "details No-profile-found";
+        Redis::get(LOG_STREAM).push();
+
         fetchProfile.abort();
         pqxx::work addUserWork(sqlConn);
         addNewUser(nickname, &addUserWork);
@@ -71,6 +111,12 @@ int main()
     }
     catch (const std::exception &e)
     {
+        Redis::get(LOG_STREAM) << "message Load-profile-nickname "
+                               << "author player "
+                               << "result 0 "
+                               << "details No-profile-found";
+        Redis::get(LOG_STREAM).push();
+
         fetchProfile.abort();
         pqxx::work addUserWork(sqlConn);
         addNewUser(nickname, &addUserWork);

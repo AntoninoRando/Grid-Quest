@@ -323,35 +323,38 @@ Category *DefaultProfile()
     return pinfo;
 }
 
-int parseSettings(Category *settings, std::string filePath)
+std::string parseSettings(Category *settings, std::string filePath)
 {
     std::string line;
     std::ifstream settingsFile(filePath);
     if (!settingsFile.is_open())
-        return 1;
+        return "Cannot-open-file";
 
     std::string section;
     while (getline(settingsFile, line))
     {
         std::string error = settings->Change(line);
         if (error.length() > 0)
-            return 1; // throw std::invalid_argument(error);
+            return error; // throw std::invalid_argument(error);
     }
     settingsFile.close();
-    return 0;
+    return "";
 }
 
 Category *GlobalSettings::controls;
 Category *GlobalSettings::graphic;
 Category *GlobalSettings::profileInfo;
 
-int GlobalSettings::load()
+std::string GlobalSettings::load()
 {
     GlobalSettings::controls = DefaultControls();
     GlobalSettings::graphic = DefaultGraphic();
     GlobalSettings::profileInfo = DefaultProfile();
-    int error = parseSettings(GlobalSettings::controls, "etc/savedSettings/controls.txt");
-    return (error == 1) ? error : parseSettings(GlobalSettings::graphic, "etc/savedSettings/graphic.txt");
+    std::string error = parseSettings(GlobalSettings::controls, "etc/savedSettings/controls.txt");
+    if (error.length() > 0)
+        return error;
+    error = parseSettings(GlobalSettings::graphic, "etc/savedSettings/graphic.txt");
+    return error;
 }
 
 int GlobalSettings::loadProfile()
@@ -370,6 +373,11 @@ int GlobalSettings::loadProfile()
         int p = pR[0][0].as<int>();
         int w = wR[0][0].as<int>();
 
+        Redis::get(LOG_STREAM) << "message Fetch-profile-info "
+                               << "author player "
+                               << "result 0";
+        Redis::get(LOG_STREAM).push();
+
         ss << "Quest Played = " << p;
         GlobalSettings::profileInfo->Change(ss.str());
         ss.str("");
@@ -387,6 +395,10 @@ int GlobalSettings::loadProfile()
     catch (const pqxx::sql_error &e)
     {
         fetchInfo.abort();
+        Redis::get(LOG_STREAM) << "message Fetch-profile-info "
+                               << "author player "
+                               << "result 1";
+        Redis::get(LOG_STREAM).push();
         std::cout << "An error occurred!"
                   << "We couldn't fetch your profile information.\n\n"
                   << "Try re-open the app.";
@@ -396,6 +408,10 @@ int GlobalSettings::loadProfile()
     catch (const std::exception &e)
     {
         fetchInfo.abort();
+        Redis::get(LOG_STREAM) << "message Fetch-profile-info "
+                               << "author player "
+                               << "result 1";
+        Redis::get(LOG_STREAM).push();
         std::cout << "An error occurred!"
                   << "We couldn't fetch your profile information.\n\n"
                   << "Try re-open the app.";

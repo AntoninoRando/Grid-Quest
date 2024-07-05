@@ -346,9 +346,10 @@ Category *DefaultProfile();
  *
  * @param settings The category of settings where the configuration is stored.
  * @param filePath The path to the file containing the settings.
- * @return int 1 if an error occurred, 0 otherwise.
+ * @return A string describing the error occurred. If there is no error, the
+ * string is empty.
  */
-int parseSettings(Category *settings, std::string filePath);
+std::string parseSettings(Category *settings, std::string filePath);
 
 /**
  * @brief The current settings configuration.
@@ -393,10 +394,11 @@ public:
     /**
      * @brief Read and parse the file containing the saved user setting in order
      * to configure the game settings.
-     * 
-     * @return int 1 if an error occurred, 0 otherwise.
+     *
+     * @return A string describing the error occurred. If there is no error, the
+     * string is empty.
      */
-    static int load();
+    static std::string load();
 
     static int loadProfile();
 };

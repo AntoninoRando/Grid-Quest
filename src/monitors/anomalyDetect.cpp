@@ -6,23 +6,21 @@
 using std::string;
 
 // Below we define the MonitorState classes that implement the state-transaction
-// function for the monitor `InputsObserve`.
+// function for the monitor `AnomalyDetect`.
 
-class AddInput : public MonitorState
+class CountError : public MonitorState
 {
-    string input_;
-    string action_;
+    string errorDetail_;
 
 public:
-    AddInput(string input, string action)
+    CountError(string errorDetail)
     {
-        input_ = input;
-        action_ = action;
+        errorDetail_ = errorDetail;
     }
 
     bool execCommitQueries(pqxx::work transaction) override
     {
-        query_ << "INCRBY inputs:" << input_ << ":" << action_ << " 1";
+        query_ << "INCRBY error:" << errorDetail_ << " 1";
         string query = prettyPrintQuery();
         // Executing a REDIS command with Redis class fill free the previous reply.
         // This is a problem is we're using the old reply to read the stream.
@@ -36,20 +34,29 @@ public:
 
 // The monitor
 
-class InputsObserve : public Monitor
+class AnomalyDetect : public Monitor
 {
+    bool error_ = false;
     string input_;
+    int errorCount_ = 0;
 
 public:
     using Monitor::Monitor; // Inherit constructor.
 
+    int countErrors() { return errorCount_; }
+
     void stateTransition(const string id, const string key, const string value) override
     {
-        if (key == "input")
-            input_ = value;
-        else if (key == "action")
+        if (key == "message")
+            error_ = false; // Reset error flag when a new message is read.
+        else if (key == "result" && value == "1")
         {
-            setState(new AddInput(input_, value));
+            error_ = true;
+            errorCount_++;
+        }
+        else if (error_ && key == "details")
+        {
+            setState(new CountError(value));
             executeStateQuery();
         }
     }
