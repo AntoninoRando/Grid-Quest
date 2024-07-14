@@ -1,7 +1,6 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-#include <windows.h>
 
 /**
  * @brief Set the cursors position on the terminal.
@@ -16,7 +15,7 @@ void setCursorPosition(int column, int row);
 /**
  * @brief Clear everything that is in the terminal after position (column, row).
  */
-void clearConsole(SHORT column = 0, SHORT row = 0);
+void clearConsole(int column = 0, int row = 0);
 
 /**
  * @brief Perform the positive module operation between two integers.

@@ -84,7 +84,7 @@ This section gathers some user requirements for the project.
 
 ### Functional Requirements
 
-1. **Operating System.** Windows 8 or higher.
+1. The system terminal shall understand ANSI escape sequences.
 
 2. The system aesthetics and controls shall change immediately whenever any settings is modified and saved.
 
@@ -100,7 +100,7 @@ This section gathers some user requirements for the project.
 
 2. The system shall be easy and fast to run since no expensive setup is required.
 
-3. The system shall run in any windows system (8+) without requiring any change.
+3. The system shall run in any system featuring a terminal that supports ANSI escape codes.
 
 4. The game shall be run at any time and for any duration of time without any problem and system overloading.
 
