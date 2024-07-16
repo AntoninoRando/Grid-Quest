@@ -31,13 +31,6 @@ class Grid
      */
     void adjustHole(int x, int y);
 
-    /**
-     * @brief Perform positive module operator between x, y and xMin, yMin
-     * respectively, where xMin is the maximum column with a value at row y, and
-     * yMin is the maximum row with a value at column x.
-     */
-    std::tuple<int, int, int, int> modCursor(int xS, int yS, int xE, int yE) const;
-
 public:
     void show(int, int, int, int) const;
 
@@ -97,6 +90,13 @@ public:
      * @return std::string The string representation of the grid.
      */
     std::string toString() const;
+
+    /**
+     * @brief Perform positive module operator between x, y and xMin, yMin
+     * respectively, where xMin is the maximum column with a value at row y, and
+     * yMin is the maximum row with a value at column x.
+     */
+    std::tuple<int, int, int, int> modCursor(int xS, int yS, int xE, int yE) const;
 };
 
 #endif

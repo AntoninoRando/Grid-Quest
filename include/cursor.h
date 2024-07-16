@@ -3,6 +3,8 @@
 #define CURSOR_H_
 
 #include <tuple>
+#include "grid.h"
+
 /**
  * @brief The cursor direction (right, bottom, left and top). They are defined
  * in clockwise order.
@@ -65,7 +67,7 @@ public:
 
     /**
      * @brief Changes the cursor type (i.e., its behavior).
-     * 
+     *
      * @param t The new cursor type.
      */
     void setType(CursorType t) { cursorType_ = t; }
@@ -87,6 +89,8 @@ public:
      * @brief Rotate the cursor clockwise.
      */
     void rotateRight();
+
+    void modOnGrid(Grid grid);
 };
 
 #endif

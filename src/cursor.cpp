@@ -77,3 +77,12 @@ void Cursor::rotateRight()
     cursorType_.rotateRight();
     updateCursor(0, 0);
 }
+
+void Cursor::modOnGrid(Grid grid)
+{
+    std::tuple<int, int, int, int> xyMod = grid.modCursor(xS_, yS_, xE_, yE_);
+    xS_ = std::get<0>(xyMod);
+    yS_ = std::get<1>(xyMod);
+    xE_ = std::get<2>(xyMod);
+    yE_ = std::get<3>(xyMod);
+}

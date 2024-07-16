@@ -85,12 +85,6 @@ std::tuple<int, int, int, int> Grid::modCursor(int xS, int yS, int xE, int yE) c
 
 void Grid::show(int xS, int yS, int xE, int yE) const
 {
-    std::tuple<int, int, int, int> xyMod = modCursor(xS, yS, xE, yE);
-    xS = std::get<0>(xyMod);
-    yS = std::get<1>(xyMod);
-    xE = std::get<2>(xyMod);
-    yE = std::get<3>(xyMod);
-
     clearConsole();
 
     int spaces = 0;
@@ -239,13 +233,13 @@ optional<int> Grid::applyInput(char input, int xS, int yS, int xE, int yE)
     }
     else
     {
-        Redis::get() << "input " << input << " action unknown";
-        Redis::get().push();
+        // Redis::get() << "input " << input << " action unknown";
+        // Redis::get().push();
         return optional<int>{};
     }
 
-    Redis::get() << "input " << input << " action " << action;
-    Redis::get().push();
+    // Redis::get() << "input " << input << " action " << action;
+    // Redis::get().push();
     grid[yE][xE] = optional<int>{};
     adjustHole(xE, yE);
 

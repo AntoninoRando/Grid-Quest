@@ -121,31 +121,37 @@ void Quest::processInput(char input)
     {
         action = "move-up";
         user.updateCursor(0, -1);
+        user.modOnGrid(grid);
     }
     else if (input == MOVE_DOWN)
     {
         action = "move-down";
         user.updateCursor(0, 1);
+        user.modOnGrid(grid);
     }
     else if (input == MOVE_LEFT)
     {
         action = "move-left";
         user.updateCursor(-1, 0);
+        user.modOnGrid(grid);
     }
     else if (input == MOVE_RIGHT)
     {
         action = "move-right";
         user.updateCursor(1, 0);
+        user.modOnGrid(grid);
     }
     else if (input == ROTATE_LEFT)
     {
         action = "rotate-left";
         user.rotateLeft();
+        user.modOnGrid(grid);
     }
     else if (input == ROTATE_RIGHT)
     {
         action = "rotate-right";
         user.rotateRight();
+        user.modOnGrid(grid);
     }
     else if (input == ESC)
     {
