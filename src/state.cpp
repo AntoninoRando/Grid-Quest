@@ -54,8 +54,6 @@ void Defeat::show() const { std::cout << "You lost!\nPress any key to continue..
 
 void Defeat::processInput(char input) { context_->transitionTo(new Menu); }
 
-bool Quest::isEnd() { return grid.contRemaining() == 1 || hp <= 0; }
-
 void updateDB()
 {
     SessionTracker *st = new SessionTracker("postgresql://postgres:postgres@localhost/gridquest");
@@ -67,11 +65,22 @@ void updateDB()
     GlobalSettings::loadProfile();
 }
 
+bool Quest::isEnd() { return grid.contRemaining() == 1 || hp <= 0; }
+
 Quest::Quest()
 {
     name_ = "Quest";
     user = Cursor();
     user.setType(CursorType());
+
+    // Obtaining the cells colors requires to look in the settings. Since they
+    // can't change during a quest, we cache these values inside these variables
+    // at the start of every quest.
+    evenCellColor = ECELLS_COL;
+    oddCellColor = OCELLS_COL;
+    primaryCellColor = PCELL_COL;
+    secondaryCellColor = SCELL_COL;
+    colorReset = COL_RESET;
 
     int fillAmount = 18 + (rand() % 8); // i.e., from 18 to 25
     // int fillAmount = 2;
@@ -79,14 +88,68 @@ Quest::Quest()
     srand(time(nullptr));
     quest = rand() % 100 + 1;
     // quest = grid.getCell(0, 9).value() + grid.getCell(1, 9).value();
-    Redis::get() << "quest-start 1 "
-                 << "quest-grid " << grid.toString() << " "
-                 << "quest-goal " << quest;
-    Redis::get().push();
+    // Redis::get() << "quest-start 1 "
+    //              << "quest-grid " << grid.toString() << " "
+    //              << "quest-goal " << quest;
+    // Redis::get().push();
 }
 
 void Quest::show() const
-{
+{    
+    clearConsole();
+
+    int cellWidth = 5; // Max num is 999, cell is " XXX ", " XX  ", or " X   "
+    bool evenCell = true;
+    bool cursorIn = false;
+    std::string color = evenCellColor;
+
+    for (auto c : gridString())
+    {
+        if (c == '*') // Next symbols are the numbers of the primary cell
+        {
+            color = primaryCellColor;
+            cursorIn = true;
+        }
+        else if (c == '>') // Next symbols are the numbers of the secondary cell
+        {
+            color = secondaryCellColor;
+            cursorIn = true;
+        }
+        else if (c == '.') // Previous symbols were the numbers of this cell
+        {
+            if (cellWidth == 5 && cursorIn)
+            {
+                std::cout << "\033[" << color << 'm' << 'X';
+                cellWidth--;
+            }
+
+            // Fill the missing spaces of this cell, reset the color and also
+            // change it, reset the cellWidth counter for the next cell.
+            std::cout << std::string(cellWidth, ' ');
+            std::cout << colorReset;
+            evenCell = !evenCell;
+            color = evenCell ? evenCellColor : oddCellColor;
+            cellWidth = 5;
+            cursorIn = false;
+        }
+        else if (c == ':')
+        {
+            evenCell = true;
+            std::cout << '\n';
+            cursorIn = false;
+        }
+        else
+        {
+            if (cellWidth == 5)
+                std::cout << "\033[" + color + "m";
+            std::cout << c;
+            cellWidth--;
+            cursorIn = false;
+        }
+    }
+    
+    std::cout << colorReset;
+
     auto hpString = std::to_string(hp);
     auto v1 = grid.getCell(user.xS(), user.yS());
     auto v2 = grid.getCell(user.xE(), user.yE());
@@ -106,10 +169,9 @@ void Quest::show() const
     int currentHpLength = currentHPLength + hpString.length();
     int padding = std::max(maxHPLength - currentHpLength, 0);
 
-    grid.show(user.xS(), user.yS(), user.xE(), user.yE());
     std::cout << "\n\n"
-              << "  QUEST: " << quest << (quest >= 10 ? " " : "")
-              << "  |  HP: " << hpString << COL_RESET << std::string(padding, ' ')
+              << "QUEST: " << quest << (quest >= 10 ? " " : "")
+              << "  |  HP: " << hpString << colorReset << std::string(padding, ' ')
               << "  |  REMAINING: " << grid.contRemaining();
 }
 
@@ -155,14 +217,14 @@ void Quest::processInput(char input)
     }
     else if (input == ESC)
     {
-        Redis::get() << "input 27 "              // Input key
-                     << "action quest-quit "     // Input action
-                     << "quest-hp " << hp << " " // HP when quest ended
-                     << "quest-end quit";        // Quest end reason
-        Redis::get().push();
-        updateDB();
-        context_->transitionTo(new Menu);
-        return;
+        // Redis::get() << "input 27 "              // Input key
+        //              << "action quest-quit "     // Input action
+        //              << "quest-hp " << hp << " " // HP when quest ended
+        //              << "quest-end quit";        // Quest end reason
+        // Redis::get().push();
+        // updateDB();
+        // context_->transitionTo(new Menu);
+        // return;
     }
     else
     {
@@ -175,41 +237,41 @@ void Quest::processInput(char input)
             if (hp_add)
                 add = hp_add_amount;
             hp += add - diff;
-            Redis::get() << "hp " << hp << " "
-                         << "gain " << add << " "
-                         << "loose " << diff;
-            Redis::get().push();
+            // Redis::get() << "hp " << hp << " "
+            //              << "gain " << add << " "
+            //              << "loose " << diff;
+            // Redis::get().push();
         }
 
         if (isEnd())
         {
             if (hp <= 0)
             {
-                Redis::get() << "quest-hp " << hp << " "
-                             << "quest-end no-hp";
-                Redis::get().push();
-                updateDB();
-                context_->transitionTo(new Defeat);
+                // Redis::get() << "quest-hp " << hp << " "
+                //              << "quest-end no-hp";
+                // Redis::get().push();
+                // updateDB();
+                // context_->transitionTo(new Defeat);
             }
             // If the optional is empty, the grid is lost. Since quest + 1 is
             // returned, and quest +1 != quest, it is in fact lost.
             else if (grid.getCell(0, 9).value_or(quest + 1) == quest)
             {
-                Redis::get() << "quest-result " << grid.getCell(0, 9).value() << " "
-                             << "quest-hp " << hp << " "
-                             << "quest-end victory";
-                Redis::get().push();
-                updateDB();
-                context_->transitionTo(new Victory);
+                // Redis::get() << "quest-result " << grid.getCell(0, 9).value() << " "
+                //              << "quest-hp " << hp << " "
+                //              << "quest-end victory";
+                // Redis::get().push();
+                // updateDB();
+                // context_->transitionTo(new Victory);
             }
             else
             {
-                Redis::get() << "quest-result " << grid.getCell(0, 9).value() << " "
-                             << "quest-hp " << hp << " "
-                             << "quest-end no-match";
-                Redis::get().push();
-                updateDB();
-                context_->transitionTo(new Defeat);
+                // Redis::get() << "quest-result " << grid.getCell(0, 9).value() << " "
+                //              << "quest-hp " << hp << " "
+                //              << "quest-end no-match";
+                // Redis::get().push();
+                // updateDB();
+                // context_->transitionTo(new Defeat);
             }
         }
         return;
@@ -217,6 +279,11 @@ void Quest::processInput(char input)
 
     Redis::get() << "input " << input << " action " << action;
     Redis::get().push();
+}
+
+std::string Quest::gridString() const
+{
+    return grid.toString(user.xS(), user.yS(), user.xE(), user.yE());
 }
 
 void Opening::show() const

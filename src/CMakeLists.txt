@@ -42,6 +42,7 @@ link_directories(${PostgreSQL_LIBRARY_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE hiredis)
 target_link_libraries(${PROJECT_NAME} PRIVATE PostgreSQL::PostgreSQL)
 target_link_libraries(${PROJECT_NAME} PRIVATE pqxx)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${CURSES_LIBRARIES})
+# target_link_libraries(${PROJECT_NAME} PRIVATE ${CURSES_LIBRARIES})
 
 add_subdirectory(monitors)
+add_subdirectory(server)

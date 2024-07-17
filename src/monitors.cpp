@@ -109,9 +109,7 @@ void StreamParser::runMonitors(std::vector<Monitor *> monitors, int trimStream, 
         redisCommand.append(streamName).append(" - +");
 
         redisReply *reply = (redisReply *)Redis::get().run(redisCommand.c_str());
-        runMonitors_(reply, monitors);
-        for (auto monitor : monitors)
-            monitor->stateTransitionEnd();
+        runMonitors(reply, monitors);
     }
     if (trimStream >= 0)
     {
@@ -119,4 +117,14 @@ void StreamParser::runMonitors(std::vector<Monitor *> monitors, int trimStream, 
         ss << "XTRIM " << streamName << " MAXLEN " << trimStream;
         Redis::get().run(ss.str().c_str());
     }
+}
+
+void StreamParser::runMonitors(redisReply *replyArray, std::vector<Monitor *> monitors)
+{
+    if (monitors.size() == 0)
+        return;
+
+    runMonitors_(replyArray, monitors);
+    for (auto monitor : monitors)
+        monitor->stateTransitionEnd();
 }

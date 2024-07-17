@@ -126,11 +126,18 @@ class Quest : public State
     int hp_add_amount = 5;
     bool hp_add = true;
     bool isEnd();
+    std::string evenCellColor = "0";
+    std::string oddCellColor = "0";
+    std::string primaryCellColor = "0";
+    std::string secondaryCellColor = "0";
+    std::string colorReset = "0m";
+
 
 public:
     Quest();
     void show() const override;
     void processInput(char input) override;
+    std::string gridString() const;
 };
 
 /**

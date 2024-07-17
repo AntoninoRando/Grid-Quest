@@ -146,6 +146,7 @@ protected:
     bool printQuery_ = true;
 
 public:
+    Monitor() = default;
     Monitor(const char *db_url) { connect(db_url); }
     void disablePrint() { printQuery_ = false; }
     MonitorState *state() { return state_; }
@@ -209,6 +210,9 @@ public:
     static void runMonitors(std::vector<Monitor *> monitors,
                             int trimStream = -1,
                             std::string streamName = "gridquest");
+    
+    static void runMonitors(redisReply *replyArray,
+                            std::vector<Monitor *> monitors);
 };
 
 #endif

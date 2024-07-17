@@ -65,6 +65,29 @@ std::string Grid::toString() const
     return ss.str();
 }
 
+std::string Grid::toString(int xS, int yS, int xE, int yE) const
+{    
+    std::stringstream ss;
+
+    for (int row = 0; row < 10; row++)
+    {
+        for (int col = 0; col < 10; col++)
+        {
+            if (col == xS && row == yS)
+                ss << "*";
+            if (col == xE && row == yE)
+                ss << ">";
+
+            optional<int> cell = grid[row][col];
+            if (cell.has_value())
+                ss << cell.value();
+            ss << ".";
+        }
+        ss << ":";
+    }
+    return ss.str();
+}
+
 std::tuple<int, int, int, int> Grid::modCursor(int xS, int yS, int xE, int yE) const
 {
     int xM = 0;
@@ -107,7 +130,7 @@ void Grid::show(int xS, int yS, int xE, int yE) const
             optional<int> cell = grid[row][col];
             if (cell.has_value())
             {
-                cout << "\u001b[" + color + "m";
+                cout << "\033[" + color + "m";
                 if (cell.value() >= 0)
                 {
                     if (cell.value() <= 9)
@@ -224,6 +247,83 @@ optional<int> Grid::applyInput(char input, int xS, int yS, int xE, int yE)
     else if (input == MRG)
     {
         action = "merge";
+        sign = (v1.value() < 0 || v2.value() < 0) ? -1 : 1;
+        zeros = 10;
+        while (zeros < abs(v2.value()))
+            zeros *= 10;
+        grid[yS][xS] = std::clamp(sign * (abs(v1.value()) * zeros + abs(v2.value())), -999, 999);
+        lefts_--;
+    }
+    else
+    {
+        // Redis::get() << "input " << input << " action unknown";
+        // Redis::get().push();
+        return optional<int>{};
+    }
+
+    // Redis::get() << "input " << input << " action " << action;
+    // Redis::get().push();
+    grid[yE][xE] = optional<int>{};
+    adjustHole(xE, yE);
+
+    return diff;
+}
+
+std::optional<int> Grid::applyAction(std::string action, int xS, int yS, int xE, int yE)
+{
+    std::tuple<int, int, int, int> xyMod = modCursor(xS, yS, xE, yE);
+    xS = std::get<0>(xyMod);
+    yS = std::get<1>(xyMod);
+    xE = std::get<2>(xyMod);
+    yE = std::get<3>(xyMod);
+
+    optional<int> v1 = grid[yS][xS];
+    optional<int> v2 = grid[yE][xE];
+    int sign = 1;
+    int zeros = 1;
+
+    if (!v1.has_value() || !v2.has_value())
+    {
+        // Redis::get() << "input " << input << " action empty-cells";
+        // Redis::get().push();
+        return optional<int>{};
+    }
+
+    int diff = abs(v1.value() - v2.value());
+
+    if ("add" == action)
+    {
+        grid[yS][xS] = std::clamp(v1.value() + v2.value(), -999, 999);
+        lefts_--;
+    }
+    else if ("subtract" == action)
+    {
+        grid[yS][xS] = std::clamp(v1.value() - v2.value(), -999, 999);
+        lefts_--;
+    }
+    else if ("multiply" == action)
+    {
+        grid[yS][xS] = std::clamp(v1.value() * v2.value(), -999, 999);
+        lefts_--;
+    }
+    else if ("module" == action)
+    {
+        grid[yS][xS] = std::clamp(v1.value() % v2.value(), -999, 999);
+        lefts_--;
+    }
+    else if ("divide" == action)
+    {
+        if (v2.value() == 0 || v1.value() % v2.value() != 0)
+        {
+            // Redis::get() << "input " << input << " action illegal-divide";
+            // Redis::get().push();
+            return optional<int>{};
+        }
+        grid[yS][xS] = std::clamp(v1.value() / v2.value(), -999, 999);
+        lefts_--;
+    }
+    else if ("merge" == action)
+    {
         sign = (v1.value() < 0 || v2.value() < 0) ? -1 : 1;
         zeros = 10;
         while (zeros < abs(v2.value()))

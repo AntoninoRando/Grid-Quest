@@ -55,6 +55,12 @@ public:
     std::optional<int> applyInput(char, int, int, int, int);
 
     /**
+     * @brief Same as applyInput, but uses the string representation of the
+     * operation instead of the char for that operation.
+     */
+    std::optional<int> applyAction(std::string action, int, int, int, int);
+
+    /**
      * @brief Counts how many non-empty cells are left in the grid.
      * 
      * @return The number of non-empty cells of the grid.
@@ -90,6 +96,29 @@ public:
      * @return std::string The string representation of the grid.
      */
     std::string toString() const;
+
+    /**
+     * @brief Return a string representation of the grid considering where the 
+     * cursor is positioned.
+     * 
+     * The representation of the grid lists every cell, left-to-right and 
+     * bottom-to-top, with
+     * 
+     * - a dot `.` between each cell;
+     * 
+     * - two dots `:` between each row;
+     * 
+     * - a star `*` before the cell where the cursor start; at `(xS, yS)`;
+     * 
+     * - a greater sign `>` before the cell where the cursor ends; at `(xE, yE)`.
+     * 
+     * @param xS The x coordinate of the cursor start.
+     * @param yS The y coordinate of the cursor start.
+     * @param xE The x coordinate of the cursor end.
+     * @param yE The y coordinate of the cursor end.
+     * @return std::string The string representation of the grid.
+     */
+    std::string toString(int xS, int yS, int xE, int yE) const;
 
     /**
      * @brief Perform positive module operator between x, y and xMin, yMin

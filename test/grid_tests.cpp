@@ -65,3 +65,68 @@ TEST(GridString, MultipleRowFill)
     grid.setCell(0, 8, 0);
     EXPECT_EQ("0.1.2.3.4.5.6.7.8.9..0.", grid.toString());
 }
+
+TEST(GridStringCursor, EmptyGridOutsideCursor)
+{
+    Grid grid;
+    std::string gr("");
+    for (int i = 0; i < 10; i++)
+    {
+        gr.append("..........:");
+    }
+    EXPECT_EQ(gr, grid.toString(10, 10, 10, 10));
+}
+
+TEST(GridStringCursor, InsideCursor)
+{
+    Grid grid;
+    grid.setCell(0, 9, 1);
+    grid.setCell(1, 9, 2);
+    grid.setCell(2, 9, 3);
+
+    std::string gr("");
+    for (int i = 0; i < 9; i++)
+    {
+        gr.append("..........:");
+    }
+
+    EXPECT_EQ(gr + "*1.>2.3........:", grid.toString(0, 9, 1, 9));
+    EXPECT_EQ(gr + ">1.*2.3........:", grid.toString(1, 9, 0, 9));
+    EXPECT_EQ(gr + "1.*2.>3........:", grid.toString(1, 9, 2, 9));
+    EXPECT_EQ(gr + "1.>2.*3........:", grid.toString(2, 9, 1, 9));
+    EXPECT_EQ(gr + "*1.2.>3........:", grid.toString(0, 9, 2, 9));
+    EXPECT_EQ(gr + ">1.2.*3........:", grid.toString(2, 9, 0, 9));
+}
+
+TEST(GridStringCursor, MultipleRowCursor)
+{
+    Grid grid;
+    grid.setCell(0, 9, 1);
+    grid.setCell(1, 9, 2);
+    grid.setCell(2, 9, 3);
+    
+    std::string gr("");
+    for (int i = 0; i < 7; i++)
+    {
+        gr.append("..........:");
+    }
+
+    EXPECT_EQ(gr + "..........:>..........:*1.2.3........:", grid.toString(0, 9, 0, 8));
+    EXPECT_EQ(gr + "..........:.>.........:*1.2.3........:", grid.toString(0, 9, 1, 8));
+    EXPECT_EQ(gr + ">..........:..........:*1.2.3........:", grid.toString(0, 9, 0, 7));
+}
+
+TEST(GridStringCursor, EqualStartEndCursor)
+{
+    Grid grid;
+    grid.setCell(0, 9, 1);
+    grid.setCell(1, 9, 2);
+    grid.setCell(2, 9, 3);
+
+    std::string gr("");
+    for (int i = 0; i < 9; i++)
+    {
+        gr.append("..........:");
+    }
+    EXPECT_EQ(gr + "*>1.2.3........:", grid.toString(0, 9, 0, 9));
+}

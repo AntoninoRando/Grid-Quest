@@ -2,7 +2,6 @@
 #include "settings.h"
 #include "monitors.h"
 #include <conio.h>
-#include <pqxx/pqxx>
 
 // We use W-A-S-D for movement because the _getchr() return twice with arrows keys:
 // https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/078sfkak(v=vs.100)?redirectedfrom=MSDN
@@ -92,7 +91,7 @@ int main()
 
     GlobalSettings::loadProfile();
 
-    std::cout << "\u001b[" + BG_COL + "m";
+    std::cout << "\033[" + BG_COL + "m";
 
     Context game;
     game.transitionTo(new Opening);
