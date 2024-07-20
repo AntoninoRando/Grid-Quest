@@ -43,7 +43,7 @@ std::string KeyBind::Change(std::string key)
     std::string nameNoSpace = std::regex_replace(name_, std::regex(" "), "-");
     std::string keyNoSpace = std::regex_replace(key, std::regex(" "), "-");
     Redis::get() << "key-bind-change " << nameNoSpace << " "
-                 << "new-value " << keyNoSpace << " ";
+                 << "new-value '" << keyNoSpace << "' ";
 
     std::string error = validate(key);
     if (error.length() > 0)
@@ -113,7 +113,7 @@ std::string Decoration::Change(std::string newValue)
     std::string valueNoSpace = std::regex_replace(newValue, std::regex(" "), "-");
 
     Redis::get() << "decoration-change " << nameNoSpace << " "
-                 << "new-value " << valueNoSpace << " ";
+                 << "new-value '" << valueNoSpace << "' ";
 
     std::string error = validate(newValue);
     if (error.length() > 0)
@@ -284,12 +284,12 @@ Category *DefaultControls()
     Category *operations = new Category("Operations");
     controls->add(movement);
     controls->add(operations);
-    movement->add(new KeyBind("Move up", 'w'));
-    movement->add(new KeyBind("Move left", 'a'));
-    movement->add(new KeyBind("Move down", 's'));
-    movement->add(new KeyBind("Move right", 'd'));
-    movement->add(new KeyBind("Rotate left", 'q'));
-    movement->add(new KeyBind("Rotate right", 'e'));
+    movement->add(new KeyBind("Move-up", 'w'));
+    movement->add(new KeyBind("Move-left", 'a'));
+    movement->add(new KeyBind("Move-down", 's'));
+    movement->add(new KeyBind("Move-right", 'd'));
+    movement->add(new KeyBind("Rotate-left", 'q'));
+    movement->add(new KeyBind("Rotate-right", 'e'));
     operations->add(new KeyBind("Add", '+'));
     operations->add(new KeyBind("Subtract", '-'));
     operations->add(new KeyBind("Multiply", '*'));
@@ -304,10 +304,10 @@ Category *DefaultGraphic()
     Category *graphic = new Category("Graphic");
     graphic->add(new Decoration("Selection", "7"));
     graphic->add(new Decoration("Background", "0"));
-    graphic->add(new Decoration("Primary cell", "4;41;1"));
-    graphic->add(new Decoration("Secondary cell", "31;1"));
-    graphic->add(new Decoration("Even cells", "7"));
-    graphic->add(new Decoration("Odd cells", "0"));
+    graphic->add(new Decoration("Primary-cell", "4;41;1"));
+    graphic->add(new Decoration("Secondary-cell", "31;1"));
+    graphic->add(new Decoration("Even-cells", "7"));
+    graphic->add(new Decoration("Odd-cells", "0"));
     return graphic;
 }
 
@@ -342,19 +342,44 @@ std::string parseSettings(Category *settings, std::string filePath)
 }
 
 Category *GlobalSettings::controls;
+std::map<char, std::string> *GlobalSettings::actionsOfKey;
 Category *GlobalSettings::graphic;
 Category *GlobalSettings::profileInfo;
 
 std::string GlobalSettings::load()
 {
+    // Use default settings
     GlobalSettings::controls = DefaultControls();
     GlobalSettings::graphic = DefaultGraphic();
     GlobalSettings::profileInfo = DefaultProfile();
-    std::string error = parseSettings(GlobalSettings::controls, "etc/savedSettings/controls.txt");
+    GlobalSettings::actionsOfKey = new std::map<char, std::string>();
+
+    // Replace with saved settings
+    std::string error = parseSettings(GlobalSettings::controls, "../etc/savedSettings/controls.txt");
     if (error.length() > 0)
         return error;
-    error = parseSettings(GlobalSettings::graphic, "etc/savedSettings/graphic.txt");
-    return error;
+    error = parseSettings(GlobalSettings::graphic, "../etc/savedSettings/graphic.txt");
+    if (error.length() > 0)
+        return error;
+
+    // Sets the actionsOfKey map
+    Setting *movements = GlobalSettings::controls->GetChildren()["Movement"];
+    Setting *operations = GlobalSettings::controls->GetChildren()["Operations"];
+    for (auto const &[action, setting] : movements->GetChildren())
+    {
+        char key = setting->GetValue()[0];
+        if (GlobalSettings::actionsOfKey->find(key) != GlobalSettings::actionsOfKey->end())
+            return "same-key-used-more-than-once";
+        GlobalSettings::actionsOfKey->insert({key, action});
+    }
+    for (auto const &[action, setting] : operations->GetChildren())
+    {
+        char key = setting->GetValue()[0];
+        if (GlobalSettings::actionsOfKey->find(key) != GlobalSettings::actionsOfKey->end())
+            return "same-key-used-more-than-once";
+        GlobalSettings::actionsOfKey->insert({key, action});
+    }
+    return "";
 }
 
 int GlobalSettings::loadProfile()
@@ -427,6 +452,13 @@ char GlobalSettings::getKey(std::string keyName)
         throw std::invalid_argument(error);
     }
     return key->GetValue()[0];
+}
+
+std::string GlobalSettings::getActionOfKey(char key)
+{
+    if (GlobalSettings::actionsOfKey->find(key) == GlobalSettings::actionsOfKey->end())
+        return "nothing";
+    return (*GlobalSettings::actionsOfKey)[key];
 }
 
 std::string GlobalSettings::getDecoration(std::string decName)

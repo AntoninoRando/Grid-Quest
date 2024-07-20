@@ -20,6 +20,12 @@ class QuestGame
 
 public:
     QuestGame();
+
+    int quest() const { return quest_; }
+    int hp() const { return hp_; }
+    int remaining() const { return grid_.contRemaining(); }
+    int nextHp() const;
+
     void processAction(const std::string action);
     std::string gridString() const;
 };

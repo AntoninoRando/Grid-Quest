@@ -1,6 +1,6 @@
 Selection = 7
-Background = 0
-Primary cell = 41;1
-Secondary cell = 31;1
-Even cells = 7
-Odd cells = 46;1
+Background = 32
+Primary-cell = 41;1
+Secondary-cell = 31;1
+Even-cells = 7
+Odd-cells = 46;1

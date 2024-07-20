@@ -28,39 +28,54 @@ std::string QuestGame::gridString() const
     return grid_.toString(user_.xS(), user_.yS(), user_.xE(), user_.yE());
 }
 
+int QuestGame::nextHp() const
+{
+    auto v1 = grid_.getCell(user_.xS(), user_.yS());
+    auto v2 = grid_.getCell(user_.xE(), user_.yE());
+    int nextHp = hp_;
+
+    if (!hpAdd_)
+        nextHp += hpAddAmount_;
+
+    if (v1.has_value() && v2.has_value())
+        nextHp -= abs(v1.value() - v2.value());
+
+    return nextHp;
+}
+
 void QuestGame::processAction(const std::string action)
 {
-    if (action == "move-up")
+    if (action == "Move-up")
     {
         user_.updateCursor(0, -1);
         user_.modOnGrid(grid_);
     }
-    else if (action == "move-down")
+    else if (action == "Move-down")
     {
         user_.updateCursor(0, 1);
         user_.modOnGrid(grid_);
     }
-    else if (action == "move-left")
+    else if (action == "Move-left")
     {
         user_.updateCursor(-1, 0);
         user_.modOnGrid(grid_);
     }
-    else if (action == "move-right")
+    else if (action == "Move-right")
     {
         user_.updateCursor(1, 0);
         user_.modOnGrid(grid_);
     }
-    else if (action == "rotate-left")
+    else if (action == "Rotate-left")
     {
         user_.rotateLeft();
         user_.modOnGrid(grid_);
     }
-    else if (action == "rotate-right")
+    else if (action == "Rotate-right")
     {
         user_.rotateRight();
         user_.modOnGrid(grid_);
     }
-    else if (action == "quest-quit")
+    else if (action == "Quest-quit")
     {
         // Redis::get() << "input 27 "              // Input key
         //              << "action quest-quit "     // Input action

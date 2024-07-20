@@ -291,27 +291,27 @@ std::optional<int> Grid::applyAction(std::string action, int xS, int yS, int xE,
 
     int diff = abs(v1.value() - v2.value());
 
-    if ("add" == action)
+    if ("Add" == action)
     {
         grid[yS][xS] = std::clamp(v1.value() + v2.value(), -999, 999);
         lefts_--;
     }
-    else if ("subtract" == action)
+    else if ("Subtract" == action)
     {
         grid[yS][xS] = std::clamp(v1.value() - v2.value(), -999, 999);
         lefts_--;
     }
-    else if ("multiply" == action)
+    else if ("Multiply" == action)
     {
         grid[yS][xS] = std::clamp(v1.value() * v2.value(), -999, 999);
         lefts_--;
     }
-    else if ("module" == action)
+    else if ("Module" == action)
     {
         grid[yS][xS] = std::clamp(v1.value() % v2.value(), -999, 999);
         lefts_--;
     }
-    else if ("divide" == action)
+    else if ("Divide" == action)
     {
         if (v2.value() == 0 || v1.value() % v2.value() != 0)
         {
@@ -322,7 +322,7 @@ std::optional<int> Grid::applyAction(std::string action, int xS, int yS, int xE,
         grid[yS][xS] = std::clamp(v1.value() / v2.value(), -999, 999);
         lefts_--;
     }
-    else if ("merge" == action)
+    else if ("Concat" == action)
     {
         sign = (v1.value() < 0 || v2.value() < 0) ? -1 : 1;
         zeros = 10;

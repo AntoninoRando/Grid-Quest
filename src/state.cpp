@@ -65,13 +65,9 @@ void updateDB()
     GlobalSettings::loadProfile();
 }
 
-bool Quest::isEnd() { return grid.contRemaining() == 1 || hp <= 0; }
-
 Quest::Quest()
 {
     name_ = "Quest";
-    user = Cursor();
-    user.setType(CursorType());
 
     // Obtaining the cells colors requires to look in the settings. Since they
     // can't change during a quest, we cache these values inside these variables
@@ -82,20 +78,54 @@ Quest::Quest()
     secondaryCellColor = SCELL_COL;
     colorReset = COL_RESET;
 
-    int fillAmount = 18 + (rand() % 8); // i.e., from 18 to 25
-    // int fillAmount = 2;
-    grid.fill(fillAmount);
-    srand(time(nullptr));
-    quest = rand() % 100 + 1;
-    // quest = grid.getCell(0, 9).value() + grid.getCell(1, 9).value();
+    Redis::get("gridquest:inputs") << "action quest-start";
+    Redis::get("gridquest:inputs").push();
+
     // Redis::get() << "quest-start 1 "
     //              << "quest-grid " << grid.toString() << " "
     //              << "quest-goal " << quest;
     // Redis::get().push();
+
+    auto questReply = (redisReply *)Redis::get().runNoFree(("GET gridquest:quest"));
+    quest_ = questReply->str;
+    freeReplyObject(questReply);
 }
 
 void Quest::show() const
-{    
+{
+    std::string gridString;
+    std::string currentHp;
+    std::string nextHp;
+    std::string remaining;
+
+    // while (true)
+    // {
+    //     auto serverReply = (redisReply *) Redis::get().runNoFree("GET gridquest:serverReplyCheck");
+    //     auto clientReply = (redisReply *) Redis::get().runNoFree("GET gridquest:clientReplyCheck");
+    //     if (serverReply->str == clientReply->str)
+    //     {
+    //         freeReplyObject(serverReply);
+    //         freeReplyObject(clientReply);
+    //         continue;
+    //     }
+
+    //     freeReplyObject(serverReply);
+    //     freeReplyObject(clientReply);
+    auto gridStringReply = (redisReply *)Redis::get().runNoFree(("GET gridquest:gridString"));
+    auto hpReply = (redisReply *)Redis::get().runNoFree(("GET gridquest:hp"));
+    auto nextHpReply = (redisReply *)Redis::get().runNoFree(("GET gridquest:nextHp"));
+    auto remainingReply = (redisReply *)Redis::get().runNoFree(("GET gridquest:remaining"));
+    gridString = gridStringReply->str;
+    currentHp = hpReply->str;
+    nextHp = nextHpReply->str;
+    remaining = remainingReply->str;
+    freeReplyObject(gridStringReply);
+    freeReplyObject(hpReply);
+    freeReplyObject(nextHpReply);
+    freeReplyObject(remainingReply);
+    //     break;
+    // }
+
     clearConsole();
 
     int cellWidth = 5; // Max num is 999, cell is " XXX ", " XX  ", or " X   "
@@ -103,7 +133,7 @@ void Quest::show() const
     bool cursorIn = false;
     std::string color = evenCellColor;
 
-    for (auto c : gridString())
+    for (auto c : gridString)
     {
         if (c == '*') // Next symbols are the numbers of the primary cell
         {
@@ -147,21 +177,17 @@ void Quest::show() const
             cursorIn = false;
         }
     }
-    
+
     std::cout << colorReset;
 
-    auto hpString = std::to_string(hp);
-    auto v1 = grid.getCell(user.xS(), user.yS());
-    auto v2 = grid.getCell(user.xE(), user.yE());
-
+    auto hpString = currentHp;
     int currentHPLength = 0;
 
-    if (v1.has_value() && v2.has_value())
+    if (nextHp != "")
     {
-        int nextHp = hp - abs(v1.value() - v2.value()) + (!hp_add ? hp_add_amount : 0);
         hpString.append(" -> ");
-        hpString.append((nextHp >= hp) ? "\033[32m" : "\033[31m");
-        hpString.append(std::to_string(nextHp));
+        hpString.append((std::stoi(currentHp) >= std::stoi(nextHp)) ? "\033[32m" : "\033[31m");
+        hpString.append(nextHp);
         currentHPLength = -5; // Removing the length of the unicode "\033..."
     }
 
@@ -170,120 +196,26 @@ void Quest::show() const
     int padding = std::max(maxHPLength - currentHpLength, 0);
 
     std::cout << "\n\n"
-              << "QUEST: " << quest << (quest >= 10 ? " " : "")
+              << "QUEST: " << quest_
               << "  |  HP: " << hpString << colorReset << std::string(padding, ' ')
-              << "  |  REMAINING: " << grid.contRemaining();
+              << "  |  REMAINING: " << remaining;
 }
 
 void Quest::processInput(char input)
 {
-    std::string action;
+    std::string action = GlobalSettings::getActionOfKey(input);
+    Redis::get("gridquest:inputs") << "input " << input << " action " << action;
+    Redis::get("gridquest:inputs").push();
 
-    if (input == MOVE_UP)
+    // Wait for the server to process input
+    int serverCheck = -1;
+    while (serverCheck <= replyCheck_)
     {
-        action = "move-up";
-        user.updateCursor(0, -1);
-        user.modOnGrid(grid);
+        auto serverReply = (redisReply *)Redis::get().runNoFree("GET gridquest:replyCheck");
+        serverCheck = std::stoi(serverReply->str);
+        freeReplyObject(serverReply);
     }
-    else if (input == MOVE_DOWN)
-    {
-        action = "move-down";
-        user.updateCursor(0, 1);
-        user.modOnGrid(grid);
-    }
-    else if (input == MOVE_LEFT)
-    {
-        action = "move-left";
-        user.updateCursor(-1, 0);
-        user.modOnGrid(grid);
-    }
-    else if (input == MOVE_RIGHT)
-    {
-        action = "move-right";
-        user.updateCursor(1, 0);
-        user.modOnGrid(grid);
-    }
-    else if (input == ROTATE_LEFT)
-    {
-        action = "rotate-left";
-        user.rotateLeft();
-        user.modOnGrid(grid);
-    }
-    else if (input == ROTATE_RIGHT)
-    {
-        action = "rotate-right";
-        user.rotateRight();
-        user.modOnGrid(grid);
-    }
-    else if (input == ESC)
-    {
-        // Redis::get() << "input 27 "              // Input key
-        //              << "action quest-quit "     // Input action
-        //              << "quest-hp " << hp << " " // HP when quest ended
-        //              << "quest-end quit";        // Quest end reason
-        // Redis::get().push();
-        // updateDB();
-        // context_->transitionTo(new Menu);
-        // return;
-    }
-    else
-    {
-        auto hpDiff = grid.applyInput(input, user.xS(), user.yS(), user.xE(), user.yE());
-        if (hpDiff.has_value())
-        {
-            int diff = hpDiff.value();
-            int add = 0;
-            hp_add = !hp_add;
-            if (hp_add)
-                add = hp_add_amount;
-            hp += add - diff;
-            // Redis::get() << "hp " << hp << " "
-            //              << "gain " << add << " "
-            //              << "loose " << diff;
-            // Redis::get().push();
-        }
-
-        if (isEnd())
-        {
-            if (hp <= 0)
-            {
-                // Redis::get() << "quest-hp " << hp << " "
-                //              << "quest-end no-hp";
-                // Redis::get().push();
-                // updateDB();
-                // context_->transitionTo(new Defeat);
-            }
-            // If the optional is empty, the grid is lost. Since quest + 1 is
-            // returned, and quest +1 != quest, it is in fact lost.
-            else if (grid.getCell(0, 9).value_or(quest + 1) == quest)
-            {
-                // Redis::get() << "quest-result " << grid.getCell(0, 9).value() << " "
-                //              << "quest-hp " << hp << " "
-                //              << "quest-end victory";
-                // Redis::get().push();
-                // updateDB();
-                // context_->transitionTo(new Victory);
-            }
-            else
-            {
-                // Redis::get() << "quest-result " << grid.getCell(0, 9).value() << " "
-                //              << "quest-hp " << hp << " "
-                //              << "quest-end no-match";
-                // Redis::get().push();
-                // updateDB();
-                // context_->transitionTo(new Defeat);
-            }
-        }
-        return;
-    }
-
-    Redis::get() << "input " << input << " action " << action;
-    Redis::get().push();
-}
-
-std::string Quest::gridString() const
-{
-    return grid.toString(user.xS(), user.yS(), user.xE(), user.yE());
+    replyCheck_ = serverCheck;
 }
 
 void Opening::show() const

@@ -15,11 +15,20 @@ public:
     {
         Redis::get().log("quest-creation", SERVER, OK);
         quest_ = new QuestGame();
+        pushQuestInfos();
     }
 
-    void pushQuestString()
+    void pushQuestInfos()
     {
-        auto reply = Redis::get().runNoFree(("SET gridString " + quest_->gridString()).c_str());
+        auto reply = Redis::get().runNoFree(("SET gridquest:gridString " + quest_->gridString()).c_str());
+        freeReplyObject(reply);
+        reply = Redis::get().runNoFree("SET gridquest:remaining %d", quest_->remaining());
+        freeReplyObject(reply);
+        reply = Redis::get().runNoFree("SET gridquest:hp %d", quest_->hp());
+        freeReplyObject(reply);
+        reply = Redis::get().runNoFree("SET gridquest:nextHp %d", quest_->nextHp());
+        freeReplyObject(reply);
+        reply = Redis::get().runNoFree("SET gridquest:quest %d", quest_->quest());
         freeReplyObject(reply);
     }
 
@@ -39,7 +48,7 @@ public:
         {
             inGame_ = false;
         }
-        else if (value == "game-start")
+        else if (value == "quest-start")
         {
             inGame_ = true;
         }
@@ -84,6 +93,11 @@ int main()
       second is an array of stream entries; call this element the 3° reply.
     - 3° reply is the array we need to parse.
     */
+
+    int replyCheck = 0;
+
+    auto reply = Redis::get().runNoFree("SET gridquest:replyCheck %d", replyCheck);
+    freeReplyObject(reply);
 
     Redis::get().log("read-stream-start", SERVER, OK);
     while (true)
@@ -138,6 +152,9 @@ int main()
         lastEntryId = inputReader->retrieveLastId();
         freeReplyObject(reply);
 
-        inputReader->pushQuestString();
+        inputReader->pushQuestInfos();
+        replyCheck++; // The first action will be "quest-start"
+        reply = (redisReply *)Redis::get().runNoFree("SET gridquest:replyCheck %d", replyCheck);
+        freeReplyObject(reply);
     }
 }

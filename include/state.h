@@ -119,13 +119,8 @@ public:
  */
 class Quest : public State
 {
-    Cursor user;
-    Grid grid;
-    int quest;
-    int hp = 10;
-    int hp_add_amount = 5;
-    bool hp_add = true;
-    bool isEnd();
+    int replyCheck_ = 1;
+    std::string quest_;
     std::string evenCellColor = "0";
     std::string oddCellColor = "0";
     std::string primaryCellColor = "0";
@@ -137,7 +132,6 @@ public:
     Quest();
     void show() const override;
     void processInput(char input) override;
-    std::string gridString() const;
 };
 
 /**

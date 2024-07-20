@@ -15,9 +15,9 @@ void *Redis::run(const char *format, ...)
     lastReply = redisCommand(context, format);
     if (lastReply == NULL)
     {
-        std::string error("ERROR:BAD-COMMAND ");
-        error.append(context->errstr);
-        putInStream(error);
+        // @TODO migliorare
+        std::cout << "REDIS FATAL ERROR: " << context->errstr << std::endl;
+        exit(1);
     }
     return lastReply;
 }

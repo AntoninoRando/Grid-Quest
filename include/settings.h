@@ -10,27 +10,27 @@
 /**
  * @brief The key to move up the cursor on the grid.
  */
-#define MOVE_UP GlobalSettings::getKey("Move up")
+#define MOVE_UP GlobalSettings::getKey("Move-up")
 /**
  * @brief The key to move down the cursor on the grid.
  */
-#define MOVE_DOWN GlobalSettings::getKey("Move down")
+#define MOVE_DOWN GlobalSettings::getKey("Move-down")
 /**
  * @brief The key to move left the cursor on the grid.
  */
-#define MOVE_LEFT GlobalSettings::getKey("Move left")
+#define MOVE_LEFT GlobalSettings::getKey("Move-left")
 /**
  * @brief The key to move right the cursor on the grid.
  */
-#define MOVE_RIGHT GlobalSettings::getKey("Move right")
+#define MOVE_RIGHT GlobalSettings::getKey("Move-right")
 /**
  * @brief The key to rotate counterclockwise the cursor on the grid.
  */
-#define ROTATE_LEFT GlobalSettings::getKey("Rotate left")
+#define ROTATE_LEFT GlobalSettings::getKey("Rotate-left")
 /**
  * @brief The key to rotate clockwise the cursor on the grid.
  */
-#define ROTATE_RIGHT GlobalSettings::getKey("Rotate right")
+#define ROTATE_RIGHT GlobalSettings::getKey("Rotate-right")
 /**
  * @brief The key to add the two numbers in the grid cursor.
  */
@@ -68,19 +68,19 @@
 /**
  * @brief The decoration for the primary cell of the grid cursor.
  */
-#define PCELL_COL GlobalSettings::getDecoration("Primary cell")
+#define PCELL_COL GlobalSettings::getDecoration("Primary-cell")
 /**
  * @brief The decoration for the secondary cell of the grid cursor.
  */
-#define SCELL_COL GlobalSettings::getDecoration("Secondary cell")
+#define SCELL_COL GlobalSettings::getDecoration("Secondary-cell")
 /**
  * @brief The decoration for the grid cells that are in an event position.
  */
-#define ECELLS_COL GlobalSettings::getDecoration("Even cells")
+#define ECELLS_COL GlobalSettings::getDecoration("Even-cells")
 /**
  * @brief The decoration for the grid cells that are in an odd index.
  */
-#define OCELLS_COL GlobalSettings::getDecoration("Odd cells")
+#define OCELLS_COL GlobalSettings::getDecoration("Odd-cells")
 
 #define CURRENT_PROFILE GlobalSettings::profileInfo->findSetting("Nickname").value()->GetValue();
 
@@ -106,18 +106,19 @@ enum SettingType
 class Setting
 {
 protected:
-    Setting *parent_ = nullptr;
+    Setting     *parent_ = nullptr;
     std::string name_;
     std::string value_;
 
 public:
-    virtual ~Setting() {}
-    void SetParent(Setting *parent) { parent_ = parent; }
-    Setting *GetParent() const { return parent_; }
-    std::string GetName() const { return name_; }
-    std::string name() const { return name_; }
-    std::string GetValue() const { return value_; }
-    std::string value() const { return value_; }
+    virtual     ~Setting()                 {                   }
+    void        SetParent(Setting *parent) { parent_ = parent; }
+    Setting     *GetParent() const         { return parent_;   }
+    std::string GetName()    const         { return name_;     }
+    std::string name()       const         { return name_;     }
+    std::string GetValue()   const         { return value_;    }
+    std::string value()      const         { return value_;    }
+
     virtual std::map<std::string, Setting *> GetChildren()
     {
         return std::map<std::string, Setting *>();
@@ -255,7 +256,7 @@ public:
 };
 
 /**
- * @brief An input mapping.
+ * @brief A mapping between a key of the keyboard and an action in the game.
  */
 class KeyBind : public Setting
 {
@@ -269,7 +270,8 @@ public:
 };
 
 /**
- * @brief A style of some object of the game.
+ * @brief A mapping between a terminal color code and the name of the game
+ * element that is colored with that code.
  */
 class Decoration : public Setting
 {
@@ -363,6 +365,12 @@ public:
     static Category *controls;
 
     /**
+     * @brief The mapping between a key of the keyboard and the action that key
+     * triggers.
+     */
+    static std::map<char, std::string> *actionsOfKey;
+
+    /**
      * @brief The category that groups decoration settings.
      */
     static Category *graphic;
@@ -380,6 +388,8 @@ public:
      * @return The character binded to the key.
      */
     static char getKey(std::string keyName);
+    
+    static std::string getActionOfKey(char key);
 
     /**
      * @brief Return the value of the Decoration named `decName`. If a
