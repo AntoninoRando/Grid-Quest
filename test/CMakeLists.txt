@@ -23,7 +23,6 @@ add_executable(tests
   settings_tests.cpp
   ../src/grid.cpp
   ../src/cursor.cpp
-  ../src/grid.cpp
   ../src/settings.cpp
   ../src/state.cpp
   ../src/utils.cpp
@@ -51,3 +50,23 @@ if (WIN32)
     COMMAND_EXPAND_LISTS
   )
 endif ()
+
+# ------------------------------------------------------------------------------
+
+add_executable(testgenerator
+  test_generator.cpp
+  ../src/grid.cpp
+  ../src/cursor.cpp
+  ../src/settings.cpp
+  ../src/state.cpp
+  ../src/utils.cpp
+  ../src/menu.cpp
+  ../src/monitors.cpp
+)
+
+target_include_directories(testgenerator PRIVATE "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(testgenerator
+PRIVATE
+  hiredis
+  PostgreSQL::PostgreSQL
+  pqxx)

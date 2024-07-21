@@ -12,7 +12,8 @@
 enum LOG_AUTHOR
 {
     CLIENT,
-    SERVER
+    SERVER,
+    TEST
 };
 
 enum LOG_RESULT

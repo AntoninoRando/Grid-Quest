@@ -8,7 +8,10 @@
 #include "monitors/sessionTrack.cpp"
 #include "monitors/questAnalyze.cpp"
 
-void State::setup() { clearConsole(); }
+void State::setup()
+{ 
+    clearConsole();
+}
 
 void Context::transitionTo(State *state)
 {
@@ -30,7 +33,10 @@ void Context::show() const
     Redis::get().push();
 }
 
-void Context::processInput(char input) { state_->processInput(input); }
+void Context::processInput(char input)
+{
+    state_->processInput(input);
+}
 
 void Bye::setup()
 {
@@ -46,7 +52,7 @@ void Bye::setup()
     exit(0); //@TODO: replace this with a more elegant solution
 }
 
-void Victory::show() const { std::cout << "You won!\nPress any key to continue..."; }
+void Victory::show() const{ std::cout << "You won!\nPress any key to continue..."; }
 
 void Victory::processInput(char input) { context_->transitionTo(new Menu); }
 
@@ -69,6 +75,7 @@ Quest::Quest()
 {
     name_ = "Quest";
     replyCheck_ = 1;
+    end_ = false;
 
     // Obtaining the cells colors requires to look in the settings. Since they
     // can't change during a quest, we cache these values inside these variables
@@ -195,7 +202,7 @@ void Quest::processInput(char input)
 
     // Wait for the server to process input
     int serverCheck = -1;
-    while (serverCheck <= replyCheck_)
+    while (serverCheck <= replyCheck_ - pingTolerance)
     {
         auto serverReply = (redisReply *)Redis::get().runNoFree("GET gridquest:replyCheck");
         serverCheck = std::stoi(serverReply->str);
@@ -209,10 +216,17 @@ void Quest::processInput(char input)
     auto reply = (redisReply *)Redis::get().runNoFree("GET gridquest:endStatus");    
     std::string endStatus = reply->str;
     freeReplyObject(reply);
+
     if (endStatus == "defeat")
+    {
+        end_ = true;
         context_->transitionTo(new Defeat);
+    }
     else if (endStatus == "victory")
+    {
+        end_ = true;
         context_->transitionTo(new Victory);
+    }
 }
 
 void Opening::show() const

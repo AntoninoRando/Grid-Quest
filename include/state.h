@@ -120,6 +120,7 @@ public:
 class Quest : public State
 {
     int replyCheck_ = 1;
+    bool end_ = false;
     std::string quest_;
     std::string evenCellColor = "0";
     std::string oddCellColor = "0";
@@ -129,7 +130,10 @@ class Quest : public State
 
 public:
     Quest();
-    void show() const override;
+    int  pingTolerance = 0;
+
+    bool isEnd() const { return end_; }
+    void show()  const override;
     void processInput(char input) override;
 };
 

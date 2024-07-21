@@ -53,7 +53,7 @@ std::string KeyBind::Change(std::string key)
     std::string nameNoSpace = std::regex_replace(name_, std::regex(" "), "-");
     std::string keyNoSpace = std::regex_replace(key, std::regex(" "), "-");
     Redis::get() << "key-bind-change " << nameNoSpace << " "
-                 << "new-value '" << keyNoSpace << "' ";
+                 << "new-value " << keyNoSpace << " ";
 
     std::string error = validate(key);
     if (error.length() > 0)
@@ -147,7 +147,7 @@ std::string Decoration::Change(std::string newValue)
     std::string valueNoSpace = std::regex_replace(newValue, std::regex(" "), "-");
 
     Redis::get() << "decoration-change " << nameNoSpace << " "
-                 << "new-value '" << valueNoSpace << "' ";
+                 << "new-value " << valueNoSpace << " ";
 
     std::string error = validate(newValue);
     if (error.length() > 0)

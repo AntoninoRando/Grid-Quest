@@ -6,9 +6,9 @@ QuestGame::QuestGame()
     user_ = Cursor();
     user_.setType(CursorType());
 
+    srand(time(nullptr));
     int fillAmount = 18 + (rand() % 8); // i.e., from 18 to 25
     grid_.fill(fillAmount);
-    srand(time(nullptr));
     quest_ = rand() % 100 + 1;
 
     // Redis::get() << "quest-start 1 "
