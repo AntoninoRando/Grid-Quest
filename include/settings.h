@@ -84,8 +84,13 @@
 
 #define CURRENT_PROFILE GlobalSettings::profileInfo->findSetting("Nickname").value()->GetValue();
 
-#define ENTER '\r'
-#define ESC 27
+enum SpecialKey
+{
+    DEL = '\b',   // = 8
+    ENTER = '\r', // = 13
+    ESC = '\x1b', // = 27
+    SPACE = ' '
+};
 
 enum SettingType
 {

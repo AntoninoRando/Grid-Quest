@@ -7,20 +7,14 @@ QuestGame::QuestGame()
     user_.setType(CursorType());
 
     int fillAmount = 18 + (rand() % 8); // i.e., from 18 to 25
-    // int fillAmount = 2;
     grid_.fill(fillAmount);
     srand(time(nullptr));
     quest_ = rand() % 100 + 1;
-    // quest = grid.getCell(0, 9).value() + grid.getCell(1, 9).value();
+
     // Redis::get() << "quest-start 1 "
     //              << "quest-grid " << grid.toString() << " "
     //              << "quest-goal " << quest;
     // Redis::get().push();
-}
-
-bool QuestGame::isEnd()
-{
-    return grid_.contRemaining() == 1 || hp_ <= 0;
 }
 
 std::string QuestGame::gridString() const
@@ -41,6 +35,43 @@ int QuestGame::nextHp() const
         nextHp -= abs(v1.value() - v2.value());
 
     return nextHp;
+}
+
+std::string QuestGame::endStatus() const
+{
+    if (hp_ <= 0)
+    {
+        return "defeat";
+        // Redis::get() << "quest-hp " << hp << " "
+        //              << "quest-end no-hp";
+        // Redis::get().push();
+        // updateDB();
+        // context_->transitionTo(new Defeat);
+    }
+
+    if (grid_.contRemaining() > 1)
+        return "none";
+
+    // If the optional is empty, the grid_ is lost. Since quest + 1 is
+    // returned, and quest +1 != quest, it is in fact lost.
+    else if (grid_.getCell(0, 9).value_or(quest_ + 1) == quest_)
+    {
+        return "victory";
+        // Redis::get() << "quest-result " << grid_.getCell(0, 9).value() << " "
+        //              << "quest-hp " << hp << " "
+        //              << "quest-end victory";
+        // Redis::get().push();
+        // updateDB();
+        // context_->transitionTo(new Victory);
+    }
+
+    return "defeat";
+    // Redis::get() << "quest-result " << grid_.getCell(0, 9).value() << " "
+    //              << "quest-hp " << hp << " "
+    //              << "quest-end no-match";
+    // Redis::get().push();
+    // updateDB();
+    // context_->transitionTo(new Defeat);
 }
 
 void QuestGame::processAction(const std::string action)
@@ -102,38 +133,5 @@ void QuestGame::processAction(const std::string action)
             //              << "loose " << diff;
             // Redis::get().push();
         }
-
-        if (isEnd())
-        {
-            if (hp_ <= 0)
-            {
-                // Redis::get() << "quest-hp " << hp << " "
-                //              << "quest-end no-hp";
-                // Redis::get().push();
-                // updateDB();
-                // context_->transitionTo(new Defeat);
-            }
-            // If the optional is empty, the grid_ is lost. Since quest + 1 is
-            // returned, and quest +1 != quest, it is in fact lost.
-            else if (grid_.getCell(0, 9).value_or(quest_ + 1) == quest_)
-            {
-                // Redis::get() << "quest-result " << grid_.getCell(0, 9).value() << " "
-                //              << "quest-hp " << hp << " "
-                //              << "quest-end victory";
-                // Redis::get().push();
-                // updateDB();
-                // context_->transitionTo(new Victory);
-            }
-            else
-            {
-                // Redis::get() << "quest-result " << grid_.getCell(0, 9).value() << " "
-                //              << "quest-hp " << hp << " "
-                //              << "quest-end no-match";
-                // Redis::get().push();
-                // updateDB();
-                // context_->transitionTo(new Defeat);
-            }
-        }
-        return;
     }
 }

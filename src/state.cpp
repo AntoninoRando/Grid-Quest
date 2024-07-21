@@ -68,6 +68,7 @@ void updateDB()
 Quest::Quest()
 {
     name_ = "Quest";
+    replyCheck_ = 1;
 
     // Obtaining the cells colors requires to look in the settings. Since they
     // can't change during a quest, we cache these values inside these variables
@@ -78,7 +79,7 @@ Quest::Quest()
     secondaryCellColor = SCELL_COL;
     colorReset = COL_RESET;
 
-    Redis::get("gridquest:inputs") << "action quest-start";
+    Redis::get("gridquest:inputs") << "action Start-quest";
     Redis::get("gridquest:inputs").push();
 
     // Redis::get() << "quest-start 1 "
@@ -98,19 +99,6 @@ void Quest::show() const
     std::string nextHp;
     std::string remaining;
 
-    // while (true)
-    // {
-    //     auto serverReply = (redisReply *) Redis::get().runNoFree("GET gridquest:serverReplyCheck");
-    //     auto clientReply = (redisReply *) Redis::get().runNoFree("GET gridquest:clientReplyCheck");
-    //     if (serverReply->str == clientReply->str)
-    //     {
-    //         freeReplyObject(serverReply);
-    //         freeReplyObject(clientReply);
-    //         continue;
-    //     }
-
-    //     freeReplyObject(serverReply);
-    //     freeReplyObject(clientReply);
     auto gridStringReply = (redisReply *)Redis::get().runNoFree(("GET gridquest:gridString"));
     auto hpReply = (redisReply *)Redis::get().runNoFree(("GET gridquest:hp"));
     auto nextHpReply = (redisReply *)Redis::get().runNoFree(("GET gridquest:nextHp"));
@@ -123,8 +111,6 @@ void Quest::show() const
     freeReplyObject(hpReply);
     freeReplyObject(nextHpReply);
     freeReplyObject(remainingReply);
-    //     break;
-    // }
 
     clearConsole();
 
@@ -186,7 +172,7 @@ void Quest::show() const
     if (nextHp != "")
     {
         hpString.append(" -> ");
-        hpString.append((std::stoi(currentHp) >= std::stoi(nextHp)) ? "\033[32m" : "\033[31m");
+        hpString.append((std::stoi(currentHp) > std::stoi(nextHp)) ? "\033[31m" : "\033[32m");
         hpString.append(nextHp);
         currentHPLength = -5; // Removing the length of the unicode "\033..."
     }
@@ -216,6 +202,17 @@ void Quest::processInput(char input)
         freeReplyObject(serverReply);
     }
     replyCheck_ = serverCheck;
+
+    if (action == "Quit-quest" || action == "Drop-quest")
+        context_->transitionTo(new Menu);
+
+    auto reply = (redisReply *)Redis::get().runNoFree("GET gridquest:endStatus");    
+    std::string endStatus = reply->str;
+    freeReplyObject(reply);
+    if (endStatus == "defeat")
+        context_->transitionTo(new Defeat);
+    else if (endStatus == "victory")
+        context_->transitionTo(new Victory);
 }
 
 void Opening::show() const

@@ -16,7 +16,17 @@ KeyBind::KeyBind(std::string name, char key)
 
 std::string KeyBind::validate(std::string newValue)
 {
-    if (newValue.size() != 1)
+    bool isSpecial = false;
+    for (auto s : {"ESC", "DEL", "SPACE", "ENTER"})
+    {
+        if (s == newValue)
+        {
+            isSpecial = true;
+            break;
+        }
+    }
+
+    if (newValue.size() != 1 && !isSpecial)
         return "New-value-is-not-a-character";
 
     Setting *topParent = parent_;
@@ -53,7 +63,17 @@ std::string KeyBind::Change(std::string key)
         return error;
     }
 
-    value_ = key[0];
+    if (key == "ESC")
+        value_ = ESC;
+    else if (key == "DEL")
+        value_ = DEL;
+    else if (key == "SPACE")
+        value_ = SPACE;
+    else if (key == "ENTER")
+        value_ = ENTER;
+    else
+        value_ = key[0];
+    
     Redis::get().push();
     return "";
 }
@@ -64,7 +84,21 @@ std::string KeyBind::ChangeWithInput()
     return Change(std::string(1, newKey));
 }
 
-std::string KeyBind::ToString() const { return name_ + ": " + value_; }
+std::string KeyBind::ToString() const
+{ 
+    std::string repr(name_);
+    repr.append(": ");
+
+    if (value_[0] == ESC) // "" + char converts char to string for comparison
+        return repr + "ESC";
+    if (value_[0] == DEL)
+        return repr + "DEL";
+    if (value_[0] == SPACE)
+        return repr + "SPACE";
+    if (value_[0] == ENTER)
+        return repr + "ENTER";
+    return name_ + ": " + value_; 
+}
 
 Decoration::Decoration(std::string name, std::string code)
 {
@@ -282,20 +316,28 @@ Category *DefaultControls()
     Category *controls = new Category("Controls");
     Category *movement = new Category("Movement");
     Category *operations = new Category("Operations");
+    Category *others = new Category("Others");
+
     controls->add(movement);
     controls->add(operations);
+    controls->add(others);
+
     movement->add(new KeyBind("Move-up", 'w'));
     movement->add(new KeyBind("Move-left", 'a'));
     movement->add(new KeyBind("Move-down", 's'));
     movement->add(new KeyBind("Move-right", 'd'));
     movement->add(new KeyBind("Rotate-left", 'q'));
     movement->add(new KeyBind("Rotate-right", 'e'));
+
     operations->add(new KeyBind("Add", '+'));
     operations->add(new KeyBind("Subtract", '-'));
     operations->add(new KeyBind("Multiply", '*'));
     operations->add(new KeyBind("Divide", '/'));
     operations->add(new KeyBind("Module", '%'));
     operations->add(new KeyBind("Concat", '|'));
+
+    operations->add(new KeyBind("Quit-quest", ESC));
+    operations->add(new KeyBind("Drop-quest", DEL));
     return controls;
 }
 

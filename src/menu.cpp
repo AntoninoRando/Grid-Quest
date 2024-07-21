@@ -80,7 +80,7 @@ void Settings::show() const
 
     std::cout << "\033[" + BG_COL + (!selected ? ";2" : "") + "m";
     for (auto c : settings[currentSection])
-        std::cout << c->GetName() << ": " << c->GetValue() << "\n";
+        std::cout << c->ToString() << "\n";
     std::cout << COL_RESET;
 
     if (selectedSetting.has_value())

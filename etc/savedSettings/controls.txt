@@ -10,3 +10,5 @@ Multiply = *
 Divide = /
 Concat = |
 Module = m
+Quit-quest = ESC
+Drop-quest = DEL

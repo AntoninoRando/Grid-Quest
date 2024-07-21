@@ -125,8 +125,7 @@ class Quest : public State
     std::string oddCellColor = "0";
     std::string primaryCellColor = "0";
     std::string secondaryCellColor = "0";
-    std::string colorReset = "0m";
-
+    std::string colorReset = "\033[0m";
 
 public:
     Quest();

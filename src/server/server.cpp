@@ -6,10 +6,14 @@ class InputReader : public Monitor
 {
     QuestGame *quest_;
     bool inGame_ = false;
+    int replyCheck_ = 0;
     std::string lastId_ = "0-0";
 
 public:
     using Monitor::Monitor; // Inherit constructor.
+
+    int replyCheck() { return replyCheck_; }
+    std::string retrieveLastId() { return lastId_; }
 
     void createQuest()
     {
@@ -32,27 +36,27 @@ public:
         freeReplyObject(reply);
     }
 
-    std::string retrieveLastId()
-    {
-        return lastId_;
-    }
-
     void stateTransition(const std::string id, const std::string key, const std::string value) override
     {
         lastId_ = id;
+        replyCheck_++;
+        std::string endStatus;
 
         if (key != "action")
             return;
 
-        if (value == "game-quit")
+        if (value == "Quit-quest")
         {
             inGame_ = false;
         }
-        else if (value == "quest-start")
+        else if (value == "Start-quest")
         {
             inGame_ = true;
+            replyCheck_ = 0;
+            auto reply = (redisReply *)Redis::get().runNoFree("SET gridquest:endStatus none");
+            freeReplyObject(reply);
         }
-        else if (value == "quest-end")
+        else if (value == "Drop-quest")
         {
             inGame_ = false;
             quest_ = new QuestGame();
@@ -61,6 +65,16 @@ public:
         {
             Redis::get().log("process-action-of-input", SERVER, OK, "action:" + value);
             quest_->processAction(value);
+
+            endStatus = quest_->endStatus();
+            if (endStatus != "none")
+            {
+                inGame_ = false;
+                quest_ = new QuestGame();
+                auto reply = (redisReply *)Redis::get().runNoFree(("SET gridquest:endStatus " + endStatus).c_str());
+                freeReplyObject(reply);
+                return;
+            }
         }
     }
 };
@@ -94,9 +108,9 @@ int main()
     - 3° reply is the array we need to parse.
     */
 
-    int replyCheck = 0;
-
-    auto reply = Redis::get().runNoFree("SET gridquest:replyCheck %d", replyCheck);
+    auto reply = Redis::get().runNoFree("SET gridquest:replyCheck 0");
+    freeReplyObject(reply);
+    reply = (redisReply *)Redis::get().runNoFree("SET gridquest:endStatus none");
     freeReplyObject(reply);
 
     Redis::get().log("read-stream-start", SERVER, OK);
@@ -148,13 +162,16 @@ int main()
         Redis::get().log("parse-stream-entries", SERVER, OK);
         StreamParser::runMonitors(reply, {inputReader});
 
-        Redis::get().log("update-last-entry-id", SERVER, OK, "id:" + lastEntryId);
-        lastEntryId = inputReader->retrieveLastId();
+        // Redis::get().log("update-last-entry-id", SERVER, OK, "id:" + lastEntryId);
+        // lastEntryId = inputReader->retrieveLastId();
         freeReplyObject(reply);
 
         inputReader->pushQuestInfos();
-        replyCheck++; // The first action will be "quest-start"
-        reply = (redisReply *)Redis::get().runNoFree("SET gridquest:replyCheck %d", replyCheck);
+        reply = (redisReply *)Redis::get().runNoFree("SET gridquest:replyCheck %d", inputReader->replyCheck());
+        freeReplyObject(reply);
+
+        // Trim stream
+        reply = (redisReply *)Redis::get().runNoFree("XTRIM gridquest:inputs MAXLEN 0");
         freeReplyObject(reply);
     }
 }

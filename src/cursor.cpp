@@ -85,4 +85,5 @@ void Cursor::modOnGrid(Grid grid)
     yS_ = std::get<1>(xyMod);
     xE_ = std::get<2>(xyMod);
     yE_ = std::get<3>(xyMod);
+    return;
 }

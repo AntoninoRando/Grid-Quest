@@ -66,7 +66,7 @@ std::string Grid::toString() const
 }
 
 std::string Grid::toString(int xS, int yS, int xE, int yE) const
-{    
+{
     std::stringstream ss;
 
     for (int row = 0; row < 10; row++)
@@ -98,11 +98,14 @@ std::tuple<int, int, int, int> Grid::modCursor(int xS, int yS, int xE, int yE) c
     while (yM < 10 && !grid[yM][0].has_value())
         yM += 1;
 
-    yM = 10 - yM;
-    xS = (xS % xM + xM) % xM;
-    xE = (xE % xM + xM) % xM;
-    yS = (yS % yM + yM) % yM + (10 - yM);
-    yE = (yE % yM + yM) % yM + (10 - yM);
+    // y coordinate is upsidedown. To modulate it, we:
+    // 1. shift the coordinate as it it started from the top (9 - y);
+    // 2. modulate it based on the maximum number of columns (10 - yM);
+    // 3. shift the result back in place.
+    xS = posMod(xS, xM);
+    yS = 9 - posMod(9 - yS, 10 - yM);
+    xE = posMod(xE, xM);
+    yE = 9 - posMod(9 - yE, 10 - yM);
     return std::make_tuple(xS, yS, xE, yE);
 }
 
