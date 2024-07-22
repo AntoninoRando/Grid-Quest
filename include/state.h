@@ -121,7 +121,14 @@ class Quest : public State
 {
     int replyCheck_ = 1;
     bool end_ = false;
+
     std::string quest_;
+    std::string hp_;
+    std::string nextHp_;
+    std::string remaining_;
+    std::string gridString_;
+    std::string finalResult_;
+    
     std::string evenCellColor = "0";
     std::string oddCellColor = "0";
     std::string primaryCellColor = "0";

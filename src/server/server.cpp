@@ -19,6 +19,10 @@ public:
     {
         Redis::get().log("quest-creation", SERVER, OK);
         quest_ = new QuestGame();
+
+        auto reply = Redis::get().runNoFree(("SET gridquest:questGrid " + quest_->questGrid()).c_str());
+        freeReplyObject(reply);
+
         pushQuestInfos();
     }
 
@@ -64,14 +68,24 @@ public:
         else if (inGame_)
         {
             Redis::get().log("process-action-of-input", SERVER, OK, "action:" + value);
+
+            int hpBefore = quest_->hp();
             quest_->processAction(value);
+            int hpAfter = quest_->hp();
+            Redis::get() << "hp " << hpAfter << " "
+                         << "gain " << std::max(hpAfter - hpBefore, 0) << " "
+                         << "loose " << std::abs(std::min(0, hpAfter - hpBefore));
+            Redis::get().push();
 
             endStatus = quest_->endStatus();
             if (endStatus != "none")
             {
                 inGame_ = false;
+                auto reply = Redis::get().runNoFree("SET gridquest:finalResult %d", quest_->finalResult());
+                freeReplyObject(reply);
+
                 quest_ = new QuestGame();
-                auto reply = (redisReply *)Redis::get().runNoFree(("SET gridquest:endStatus " + endStatus).c_str());
+                reply = Redis::get().runNoFree(("SET gridquest:endStatus " + endStatus).c_str());
                 freeReplyObject(reply);
                 return;
             }
@@ -90,23 +104,6 @@ int main()
     std::string lastEntryId = "0-0";
     InputReader *inputReader = new InputReader();
     inputReader->createQuest();
-
-    /*
-    1) 1) "gridquest:inputs"
-       2) 1) 1) "1720989246984-0"
-             2) 1) "input"
-                2) "27"
-          2) 1) "1720989247092-0"
-             2) 1) "input"
-                2) "\r"
-          ...
-
-    - 1° reply is an array of streams. In this case, there is only 1 element and
-      it is another array; call this element the 2° reply.
-    - 2° reply is an array with 2 elements. The first is the stream name and the
-      second is an array of stream entries; call this element the 3° reply.
-    - 3° reply is the array we need to parse.
-    */
 
     auto reply = Redis::get().runNoFree("SET gridquest:replyCheck 0");
     freeReplyObject(reply);
@@ -167,11 +164,12 @@ int main()
         freeReplyObject(reply);
 
         inputReader->pushQuestInfos();
-        reply = (redisReply *)Redis::get().runNoFree("SET gridquest:replyCheck %d", inputReader->replyCheck());
-        freeReplyObject(reply);
 
         // Trim stream
         reply = (redisReply *)Redis::get().runNoFree("XTRIM gridquest:inputs MAXLEN 0");
+        freeReplyObject(reply);
+
+        reply = (redisReply *)Redis::get().runNoFree("SET gridquest:replyCheck %d", inputReader->replyCheck());
         freeReplyObject(reply);
     }
 }

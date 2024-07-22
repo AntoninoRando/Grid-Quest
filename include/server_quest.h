@@ -19,14 +19,16 @@ class QuestGame
 public:
     QuestGame();
 
-    int         quest()     const { return quest_;                }
-    int         hp()        const { return hp_;                   }
-    int         remaining() const { return grid_.contRemaining(); }
-    int         nextHp()    const;
-    std::string endStatus() const;
+    int         quest()       const { return quest_;                      }
+    int         hp()          const { return hp_;                         }
+    int         remaining()   const { return grid_.contRemaining();       }
+    int         finalResult() const { return grid_.getCell(0, 9).value(); }
+    int         nextHp()      const;
+    std::string endStatus()   const;
 
     void        processAction(const std::string action);
-    std::string gridString() const;
+    std::string gridString()  const;
+    std::string questGrid()   const;
 };
 
 #endif

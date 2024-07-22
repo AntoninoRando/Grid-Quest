@@ -89,36 +89,23 @@ Quest::Quest()
     Redis::get("gridquest:inputs") << "action Start-quest";
     Redis::get("gridquest:inputs").push();
 
-    // Redis::get() << "quest-start 1 "
-    //              << "quest-grid " << grid.toString() << " "
-    //              << "quest-goal " << quest;
-    // Redis::get().push();
 
     auto questReply = (redisReply *)Redis::get().runNoFree(("GET gridquest:quest"));
     quest_ = questReply->str;
     freeReplyObject(questReply);
+
+    questReply = (redisReply *)Redis::get().runNoFree(("GET gridquest:questGrid"));
+    std::string questGrid = questReply->str;
+    freeReplyObject(questReply);
+
+    Redis::get() << "quest-start 1 "
+                 << "quest-grid " << questGrid << " "
+                 << "quest-goal " << quest_;
+    Redis::get().push();
 }
 
 void Quest::show() const
 {
-    std::string gridString;
-    std::string currentHp;
-    std::string nextHp;
-    std::string remaining;
-
-    auto gridStringReply = (redisReply *)Redis::get().runNoFree(("GET gridquest:gridString"));
-    auto hpReply = (redisReply *)Redis::get().runNoFree(("GET gridquest:hp"));
-    auto nextHpReply = (redisReply *)Redis::get().runNoFree(("GET gridquest:nextHp"));
-    auto remainingReply = (redisReply *)Redis::get().runNoFree(("GET gridquest:remaining"));
-    gridString = gridStringReply->str;
-    currentHp = hpReply->str;
-    nextHp = nextHpReply->str;
-    remaining = remainingReply->str;
-    freeReplyObject(gridStringReply);
-    freeReplyObject(hpReply);
-    freeReplyObject(nextHpReply);
-    freeReplyObject(remainingReply);
-
     clearConsole();
 
     int cellWidth = 5; // Max num is 999, cell is " XXX ", " XX  ", or " X   "
@@ -126,7 +113,7 @@ void Quest::show() const
     bool cursorIn = false;
     std::string color = evenCellColor;
 
-    for (auto c : gridString)
+    for (auto c : gridString_)
     {
         if (c == '*') // Next symbols are the numbers of the primary cell
         {
@@ -173,14 +160,14 @@ void Quest::show() const
 
     std::cout << colorReset;
 
-    auto hpString = currentHp;
+    auto hpString = hp_;
     int currentHPLength = 0;
 
-    if (nextHp != "")
+    if (nextHp_ != "")
     {
         hpString.append(" -> ");
-        hpString.append((std::stoi(currentHp) > std::stoi(nextHp)) ? "\033[31m" : "\033[32m");
-        hpString.append(nextHp);
+        hpString.append((std::stoi(hp_) > std::stoi(nextHp_)) ? "\033[31m" : "\033[32m");
+        hpString.append(nextHp_);
         currentHPLength = -5; // Removing the length of the unicode "\033..."
     }
 
@@ -191,7 +178,7 @@ void Quest::show() const
     std::cout << "\n\n"
               << "QUEST: " << quest_
               << "  |  HP: " << hpString << colorReset << std::string(padding, ' ')
-              << "  |  REMAINING: " << remaining;
+              << "  |  REMAINING: " << remaining_;
 }
 
 void Quest::processInput(char input)
@@ -210,21 +197,81 @@ void Quest::processInput(char input)
     }
     replyCheck_ = serverCheck;
 
-    if (action == "Quit-quest" || action == "Drop-quest")
+    if (action == "Quit-quest")
         context_->transitionTo(new Menu);
 
     auto reply = (redisReply *)Redis::get().runNoFree("GET gridquest:endStatus");    
     std::string endStatus = reply->str;
     freeReplyObject(reply);
 
-    if (endStatus == "defeat")
+    reply = (redisReply *)Redis::get().runNoFree(("GET gridquest:gridString"));
+    gridString_ = reply->str;
+    freeReplyObject(reply);
+
+    reply = (redisReply *)Redis::get().runNoFree(("GET gridquest:hp"));
+    hp_ = reply->str;
+    freeReplyObject(reply);
+
+    reply = (redisReply *)Redis::get().runNoFree(("GET gridquest:nextHp"));
+    nextHp_ = reply->str;
+    freeReplyObject(reply);
+
+    reply = (redisReply *)Redis::get().runNoFree(("GET gridquest:remaining"));
+    remaining_ = reply->str;
+    freeReplyObject(reply);
+
+    reply = (redisReply *)Redis::get().runNoFree(("GET gridquest:remaining"));
+    remaining_ = reply->str;
+    freeReplyObject(reply);
+
+    reply = (redisReply *)Redis::get().runNoFree(("GET gridquest:remaining"));
+    remaining_ = reply->str;
+    freeReplyObject(reply);
+
+    if (action == "Drop-quest")
+    {
+        Redis::get() << "quest-hp " << hp_ << " " // HP when quest ended
+                     << "quest-end quit";        // Quest end reason
+        Redis::get().push();
+        updateDB();
+        context_->transitionTo(new Menu);
+        return;
+    }
+
+    if (endStatus == "none")
+        return;
+    
+    reply = (redisReply *)Redis::get().runNoFree(("GET gridquest:finalResult"));
+    finalResult_ = reply->str;
+    freeReplyObject(reply);
+
+    if (endStatus == "no-hp")
     {
         end_ = true;
+        Redis::get() << "quest-hp " << hp_ << " "
+                     << "quest-end no-hp";
+        Redis::get().push();
+        updateDB();
+        context_->transitionTo(new Defeat);
+    }
+    else if (endStatus == "no-match")
+    {
+        end_ = true;
+        Redis::get() << "quest-result " << finalResult_ << " "
+                     << "quest-hp " << hp_ << " "
+                     << "quest-end no-match";
+        Redis::get().push();
+        updateDB();
         context_->transitionTo(new Defeat);
     }
     else if (endStatus == "victory")
     {
         end_ = true;
+        Redis::get() << "quest-result " << finalResult_ << " "
+                     << "quest-hp " << hp_ << " "
+                     << "quest-end victory";
+        Redis::get().push();
+        updateDB();
         context_->transitionTo(new Victory);
     }
 }
